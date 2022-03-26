@@ -6,6 +6,8 @@
 #define XINITRC_ETC_D "/etc/X11/xinit/xinitrc.d"
 #define SLDM_CONFIG "/.config/sldm"
 
+char *home_path_append(const char *append);
+
 char *get_home(void);
 
 char *get_xinitrc(viod);

@@ -1,4 +1,3 @@
-//#define _POSIX_SOURCE
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,9 +5,6 @@
 #include "xconfig-names.h"
 #include "log-utils.h"
 #include "main.h"
-
-#define ADD_ENTRY_ARG "add-entry"
-#define REMOVE_ENTRY_ARG "add-entry"
 
 int not_in_tty() {
     FILE* fp;
@@ -40,40 +36,55 @@ enum target {
 
 struct args {
     enum target target;
+    char *entry_name;
 };
 
 void print_usage() {
 
 }
 
-struct args *parse_args(int argc, char **argv) {
+int parse_args(int argc, char **argv, struct args *args) {
     char *target;
-    struct args *args;
+    args->target = PROMPT;
+    args->entry_name = NULL;
 
-    if (argc == 1) {
-        print_usage();
-        exit(0);
-    }
+    if (argc == 2) {
+        if (strcmp(argv[1], "--help") || strcmp(argv[1], "-h")) {
+            print_usage();
+            return 1;
+        }
 
-    if (strcmp(argv[1], "--help") || strcmp(argv[1], "-h")) {
-        print_usage();
-        exit(0);
-    }
+        target = argv[1];
+        if (strcmp(target, ADD_ENTRY_ARG)) {
+            if (argc != 4) {
+                print_usage();
+                return 1;
+            }
 
-    args = (struct args *)malloc(sizeof(args));
+            args->target = ADD_ENTRY;
+            args->entry_name = argv[2];
+            add_entry_command = argv[3];
+        } else if (strcmp(target, REMOVE_ENTRY)) {
+            if (argc != 3) {
+                print_usage();
+                return 1;
+            }
 
-    target = argv[1];
-    if (strcmp(target, ADD_ENTRY_ARG)) {
-        args->target = ADD_ENTRY;
-    } else if (strcmp(target, REMOVE_ENTRY)) {
-        args->target = REMOVE_ENTRY;
+            args->target = REMOVE_ENTRY;
+            args->entry_name = argv[2];
+        } 
     } else {
         args->target = PROMPT;
+
+        if (argc == 2)
+            args->entry_name = argv[1];
     }
 
-    for (int argi = 2; argi < argc; argi++) {
-
+    for (int argi = 3; argi < argc; argi++) {
+        //parsing args
     }
+
+    return 0;
 }
 
 void clean(struct args *arg) {
@@ -82,29 +93,31 @@ void clean(struct args *arg) {
 }
 
 int main(int argc, char** argv) {
-    struct args *args = parse_args(argc, argv);
+    struct args *args;
+    int res;
+
+    args = (struct args *)malloc(sizeof(struct args));
+    if (parse_args(argc, argv, args)) {
+        clean(args);
+    }
 
     switch (args->target)
     {
     case ADD_ENTRY:
-        add_entry("");
+        res = add_entry(args->entry_name);
         break;
     case REMOVE_ENTRY:
-        remove_entry("");
+        res = remove_entry(args->entry_name);
         break;
     case PROMPT:
         if (not_in_tty()) {
             fail_not_in_tty();
-            goto cleanup;
+            clean(args);
             return 1;
         }
-        prompt();
+        res = prompt(args->entry_name);
         break;
     }
-
-    
-    cleanup:
-        clean(args);
-        
-    return 0;
+ 
+    return res;
 }

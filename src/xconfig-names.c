@@ -11,28 +11,32 @@
 char *home = NULL;
 
 char *get_home(void) {
-    if (!home)
-        home = getenv("HOME");
+    if (!home) {
+        char *home_var = getenv("HOME");
+        home = (char *)malloc(263);
+        strcpy(home, home_var);
+        for (int i = 0; i < 26; i++)
+        {
+            /* code */
+        }
+        
+    }
     return home;
 }
 
-char *concat(const char *base, const char *append)
-{
-    const size_t len1 = strlen(base);
+char *home_path_append(const char *append) {
+    const char *home = get_home();
+    const size_t len1 = strlen(home);
     const size_t len2 = strlen(append);
-    char *result = malloc(len1 + len2 + 1);
+    char *result = malloc(len1 + len2 + 2);
 
     if (!result) 
         die("Out of memory");
     
-    memcpy(result, base, len1);
-    memcpy(result + len1, append, len2 + 1);
+    memcpy(result, home, len1);
+    result[len1] = "/";
+    memcpy(result + len1 + 1, append, len2 + 1);
     return result;
-}
-
-char *home_append(const char *append) {
-    const char *home = get_home();
-    return concat(home, append);
 }
 
 char *xinitrc = NULL;
@@ -63,4 +67,7 @@ void cleanup_names(void) {
     
     if (sldm_config)
         free(sldm_config);
+
+    if (home) 
+        free(home);
 }
