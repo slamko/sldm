@@ -1,1 +1,0 @@
-char *get_home();

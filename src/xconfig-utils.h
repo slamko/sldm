@@ -1,0 +1,1 @@
+int copy_base_config(char *);
