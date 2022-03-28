@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 void error(const char* err, ...) {
     va_list args;
@@ -16,7 +17,6 @@ void error_not_in_tty(void) {
 
 void die_s(char *err, int status) {
     error(err);
-    exit(status);
 }
 
 void die(char *err) {

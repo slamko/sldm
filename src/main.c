@@ -1,4 +1,3 @@
-#include "xconfig-utils.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,7 +6,9 @@
 #include <errno.h>
 #include "xconfig-names.h"
 #include "log-utils.h"
-#include "main.h"
+#include "command-names.h"
+
+char *add_entry_command;
 
 int write_exec_command(FILE *fp) {
     char *exec_line;
@@ -22,7 +23,7 @@ int write_exec_command(FILE *fp) {
 
     exec_command = EXEC_C;
     strcpy(exec_line, exec_command);
-    exec_line[EXEC_C_LENGTH] = " ";
+    exec_line[EXEC_C_LENGTH] = ' ';
     strcpy(exec_line + EXEC_C_LENGTH + 1, add_entry_command);
     fputs(exec_line, fp);
     free(exec_line);
@@ -34,26 +35,33 @@ int copy_base_config(char *new_entry_path) {
     char xconfig_ch;
     FILE *xinitrc;
     FILE *new_entry;
+    int res;
 
     if (access(get_xconfig(), R_OK)) {
         new_entry = fopen(new_entry_path, "w");
-        if (write_exec_command(new_entry)) 
+        if (!new_entry)
             return 1;
 
+        res = write_exec_command(new_entry);
+
         fclose(new_entry);
-        return 0;
+        return res;
     }
 
     xinitrc = fopen(get_xconfig(), "r");
-    new_entry = fopen(new_entry_path, "rw");
+    new_entry = fopen(new_entry_path, "w");
+    if (!new_entry)
+        return 1;
 
     while ((xconfig_ch = fgetc(xinitrc)) != EOF) {
         fputc(xconfig_ch, new_entry);
     }
     
-    write_exec_command(new_entry);
+    res = write_exec_command(new_entry);
     fclose(xinitrc);
     fclose(new_entry);
+
+    return res;
 }
 
 int entry_invalid(char *new_entry) {
@@ -67,7 +75,7 @@ int add_entry(char *new_entry) {
     if (entry_invalid(new_entry)) 
         return 1;
 
-    new_entry_path = home_path_append(new_entry);
+    new_entry_path = sldm_config_append(new_entry);
     if (!new_entry_path)
         return 1;
 
@@ -77,8 +85,8 @@ int add_entry(char *new_entry) {
     }
     
     res = copy_base_config(new_entry_path);
-    if (res) 
-        pritnf("Added new entry with name '%s'", new_entry);
+    if (!res) 
+        printf("Added new entry with name '%s'\n", new_entry);
 
     return res;
 }
@@ -95,7 +103,7 @@ int remove_entry(char *entry_name) {
         return 1;
 
     res = remove(remove_entry_path);
-    if (res) 
+    if (!res) 
         printf("Entry was removed");
 
     return res;
@@ -104,4 +112,6 @@ int remove_entry(char *entry_name) {
 int prompt(char *entry_name) {
     if (entry_invalid(entry_name)) 
         return 1;
+
+    return 0;
 }

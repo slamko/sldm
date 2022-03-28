@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <errno.h>
+#include <sys/stat.h>
 #include "xconfig-names.h"
 #include "log-utils.h"
 
@@ -24,37 +25,48 @@ char *get_home(void) {
     return home;
 }
 
-char *home_path_append(const char *append) {
-    const char *home = get_home();
-    const size_t len1 = strlen(home);
-    const size_t len2 = strlen(append);
-    char *result = malloc(len1 + len2 + 2);
+char *concat(const char *base, const char *appends) {
+    const size_t len1 = strlen(base);
+    const size_t len2 = strlen(appends);
+    char *result = malloc(len1 + len2 + 1);
 
     if (!result) 
         die("Out of memory");
     
-    memcpy(result, home, len1);
-    result[len1] = "/";
-    memcpy(result + len1 + 1, append, len2 + 1);
+    memcpy(result, base, len1);
+    memcpy(result + len1, appends, len2 + 1);
     return result;
+}
+
+char *home_path_append(const char *appends) {
+    const char *home = get_home();
+    return concat(home, appends);
 }
 
 char *xinitrc = NULL;
 
 char *get_xinitrc_l(void) {
     if (!xinitrc) 
-        xinitrc = home_append(XINITRC_L);
+        xinitrc = home_path_append(XINITRC_L);
 
     return xinitrc;
 }
 
-char *sldm_config = NULL;
+char *sldm_config_dir = NULL;
 
 char *get_sldm_config_dir(void) {
-    if (!sldm_config) 
-        sldm_config = home_append(SLDM_CONFIG);
+    if (!sldm_config_dir) 
+        sldm_config_dir = home_path_append(SLDM_CONFIG);
 
-    return sldm_config;
+    struct stat sb;
+    if (stat(sldm_config_dir, &sb) && !S_ISDIR(sb.st_mode)) 
+        mkdir(sldm_config_dir, 0777);
+
+    return sldm_config_dir;
+}
+
+char *sldm_config_append(char *appends) {
+    return concat(get_sldm_config_dir(), appends);
 }
 
 char *get_xconfig(void) {
@@ -65,8 +77,8 @@ void cleanup_names(void) {
     if (xinitrc)
         free(xinitrc);
     
-    if (sldm_config)
-        free(sldm_config);
+    if (sldm_config_dir)
+        free(sldm_config_dir);
 
     if (home) 
         free(home);

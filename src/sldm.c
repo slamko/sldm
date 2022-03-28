@@ -40,7 +40,7 @@ struct args {
 };
 
 void print_usage() {
-
+    printf("usage: \n");
 }
 
 int parse_args(int argc, char **argv, struct args *args) {
@@ -48,31 +48,29 @@ int parse_args(int argc, char **argv, struct args *args) {
     args->target = PROMPT;
     args->entry_name = NULL;
 
-    if (argc == 2) {
-        if (strcmp(argv[1], "--help") || strcmp(argv[1], "-h")) {
+    if (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")) {
+        print_usage();
+        return 1;
+    }
+
+    target = argv[1];
+    if (!strcmp(target, ADD_ENTRY_ARG)) {
+        if (argc != 4) {
             print_usage();
             return 1;
         }
 
-        target = argv[1];
-        if (strcmp(target, ADD_ENTRY_ARG)) {
-            if (argc != 4) {
-                print_usage();
-                return 1;
-            }
+        args->target = ADD_ENTRY;
+        args->entry_name = argv[2];
+        add_entry_command = argv[3];
+    } else if (!strcmp(target, REMOVE_ENTRY_ARG)) {
+        if (argc != 3) {
+            print_usage();
+            return 1;
+        }
 
-            args->target = ADD_ENTRY;
-            args->entry_name = argv[2];
-            add_entry_command = argv[3];
-        } else if (strcmp(target, REMOVE_ENTRY)) {
-            if (argc != 3) {
-                print_usage();
-                return 1;
-            }
-
-            args->target = REMOVE_ENTRY;
-            args->entry_name = argv[2];
-        } 
+        args->target = REMOVE_ENTRY;
+        args->entry_name = argv[2];
     } else {
         args->target = PROMPT;
 
@@ -94,11 +92,12 @@ void clean(struct args *arg) {
 
 int main(int argc, char** argv) {
     struct args *args;
-    int res;
+    int res = 1;
 
     args = (struct args *)malloc(sizeof(struct args));
     if (parse_args(argc, argv, args)) {
         clean(args);
+        return res;
     }
 
     switch (args->target)

@@ -4,12 +4,14 @@
 #define XINITRC_L "/.xinitrc"
 #define XINITRC_ETC "/etc/X11/xinit/xinitrc"
 #define XINITRC_ETC_D "/etc/X11/xinit/xinitrc.d"
-#define SLDM_CONFIG "/.config/sldm"
+#define SLDM_CONFIG "/.config/sldm/"
 
 char *home_path_append(const char *append);
 
+char *sldm_config_append(char *appends);
+
 char *get_home(void);
 
-char *get_xinitrc(viod);
+char *get_xconfig(void);
 
 void cleanup_names(void);
