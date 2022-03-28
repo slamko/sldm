@@ -1,6 +1,6 @@
-void fail(void);
+void error(const char* err, ...);
 
-void fail_not_in_tty(void);
+void error_not_in_tty(void);
 
 void die_s(char *, int);
 

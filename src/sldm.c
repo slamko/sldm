@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
         break;
     case PROMPT:
         if (not_in_tty()) {
-            fail_not_in_tty();
+            error_not_in_tty();
             clean(args);
             return 1;
         }
