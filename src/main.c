@@ -8,6 +8,7 @@
 #include "log-utils.h"
 #include "command-names.h"
 
+extern int errno;
 char *add_entry_command;
 
 int write_exec_command(FILE *fp) {
@@ -98,14 +99,16 @@ int remove_entry(char *entry_name) {
     if (entry_invalid(entry_name)) 
         return 1;
 
-    remove_entry_path = home_path_append(entry_name);
+    remove_entry_path = sldm_config_append(entry_name);
     if (!remove_entry_path)
         return 1;
 
     res = remove(remove_entry_path);
     if (!res) 
-        printf("Entry was removed");
-
+        printf("Entry with name '%s' was removed\n", entry_name);
+    else if(errno == 2)
+        error("No entry found with name: '%s'", entry_name);
+        
     return res;
 }
 

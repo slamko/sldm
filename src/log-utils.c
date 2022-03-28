@@ -5,9 +5,9 @@
 void error(const char* err, ...) {
     va_list args;
     va_start(args, err);
-    printf("error: ");
-    printf(err, args);
-    printf("\n");
+    fprintf(stderr, "error: ");
+    fprintf(stderr, err, args);
+    fprintf(stderr, "\n");
     va_end(args);
 }
 
