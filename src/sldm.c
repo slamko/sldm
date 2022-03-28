@@ -48,34 +48,38 @@ int parse_args(int argc, char **argv, struct args *args) {
     args->target = PROMPT;
     args->entry_name = NULL;
 
-    if (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")) {
-        print_usage();
-        return 1;
+    if (argc >= 2){
+        if (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")) {
+            print_usage();
+            return 1;
+        }
     }
 
-    target = argv[1];
-    if (!strcmp(target, ADD_ENTRY_ARG)) {
-        if (argc != 4) {
-            print_usage();
-            return 1;
-        }
-
-        args->target = ADD_ENTRY;
-        args->entry_name = argv[2];
-        add_entry_command = argv[3];
-    } else if (!strcmp(target, REMOVE_ENTRY_ARG)) {
-        if (argc != 3) {
-            print_usage();
-            return 1;
-        }
-
-        args->target = REMOVE_ENTRY;
-        args->entry_name = argv[2];
-    } else {
+    if (argc == 1) {
         args->target = PROMPT;
-
-        if (argc == 2)
+    } else {
+        target = argv[1];
+        if (!strcmp(target, ADD_ENTRY_ARG)) {
+            if (argc != 4) {
+                print_usage();
+                return 1;
+            }
+    
+            args->target = ADD_ENTRY;
+            args->entry_name = argv[2];
+            add_entry_command = argv[3];
+        } else if (!strcmp(target, REMOVE_ENTRY_ARG)) {
+            if (argc != 3) {
+                print_usage();
+                return 1;
+            }
+    
+            args->target = REMOVE_ENTRY;
+            args->entry_name = argv[2];
+        } else {
+            args->target = PROMPT;
             args->entry_name = argv[1];
+        }
     }
 
     for (int argi = 3; argi < argc; argi++) {

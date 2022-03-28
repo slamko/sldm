@@ -89,6 +89,7 @@ int add_entry(char *new_entry) {
     if (!res) 
         printf("Added new entry with name '%s'\n", new_entry);
 
+    free(new_entry_path);
     return res;
 }
 
@@ -109,12 +110,21 @@ int remove_entry(char *entry_name) {
     else if(errno == 2)
         error("No entry found with name: '%s'", entry_name);
         
+    free(remove_entry_path);
     return res;
 }
 
 int prompt(char *entry_name) {
-    if (entry_invalid(entry_name)) 
-        return 1;
+    int res = 1;
+    
+    if (!entry_invalid(entry_name)) {
+        char *entry_config_path;
 
-    return 0;
+        entry_config_path = sldm_config_append(entry_name);
+        res = execl("/bin/startx", "/bin/startx", entry_config_path, NULL);
+        free(entry_config_path);
+        return res;
+    }
+
+    return res;
 }
