@@ -133,21 +133,41 @@ int list_entries(char *entry_name) {
 
 int prompt(char *entry_name) {
     int res = 1;
-   
+
     if (!entry_invalid(entry_name)) {
         char *entry_config_path;
         entry_config_path = sldm_config_append(entry_name);
 
         if (!entry_config_path)
-            return 1;
+            return res;
 
         if (access(entry_config_path, R_OK)) 
-            return 1;
+            return res;
 
         res = execl("/bin/startx", "/bin/startx", entry_config_path, NULL);
         free(entry_config_path);
         return res;
     }
 
+    FILE* ls;
+    char prompt_entry_name[256];
+    char *ls_command = concat("/bin/ls --sort=time --time=creation -tr ", get_sldm_config_dir());
+    int entry_count = 0;
+
+    ls = popen(ls_command, "r");
+    if (!ls) 
+        return res;
+
+    printf("Choose an entry: \n");
+    while (fgets(prompt_entry_name, sizeof(prompt_entry_name), ls) != 0) {
+        entry_count++;
+        printf("(%d) %s", entry_count, prompt_entry_name);
+    }
+
+    printf("(0) Exit\n");
+    printf("Enter an entry number (default=1): ");
+
+    pclose(ls); 
+    free(ls_command);
     return res;
 }
