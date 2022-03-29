@@ -116,11 +116,17 @@ int remove_entry(char *entry_name) {
 
 int prompt(char *entry_name) {
     int res = 1;
-    
+   
     if (!entry_invalid(entry_name)) {
         char *entry_config_path;
-
         entry_config_path = sldm_config_append(entry_name);
+
+        if (!entry_config_path)
+            return 1;
+
+        if (access(entry_config_path, R_OK)) 
+            return 1;
+
         res = execl("/bin/startx", "/bin/startx", entry_config_path, NULL);
         free(entry_config_path);
         return res;

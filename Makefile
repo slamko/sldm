@@ -13,7 +13,7 @@ sldm.o: src/sldm.c src/main.h src/xconfig-names.h src/log-utils.h
 main.o: src/main.c src/command-names.h src/xconfig-names.h src/log-utils.h
 	$(CC) $(CFLAGS) src/main.c
 
-log-utils.o: src/log-utils.c
+log-utils.o: src/log-utils.c src/xconfig-names.h
 	$(CC) $(CFLAGS) src/log-utils.c
 
 xconfig-names.o: src/xconfig-names.c
