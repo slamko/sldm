@@ -77,6 +77,9 @@ int parse_args(int argc, char **argv, struct args *args) {
     
             args->target = REMOVE_ENTRY;
             args->entry_name = argv[2];
+        } else if (!strcmp(target, LIST_ENTRIES_ARG)) {
+            args->target = LIST_ENTRIES;
+            args->entry_name = argv[2];
         } else {
             args->target = PROMPT;
             args->entry_name = argv[1];
@@ -114,7 +117,7 @@ int main(int argc, char** argv) {
         res = remove_entry(args->entry_name);
         break;
     case LIST_ENTRIES:
-        res = list_entries();
+        res = list_entries(args->entry_name);
         break;
     case PROMPT:
         if (not_in_tty()) {

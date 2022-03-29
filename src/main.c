@@ -118,8 +118,16 @@ int remove_entry(char *entry_name) {
     return res;
 }
 
-int list_entries(void) {
+int list_entries(char *entry_name) {
+    char *list_entry_path;
     int res = 1;
+
+    if (entry_invalid(entry_name))
+        return execl("/bin/ls", "/bin/ls", get_sldm_config_dir(), NULL);
+    
+    list_entry_path = sldm_config_append(entry_name);
+    res = execl("/bin/ls", "/bin/ls", list_entry_path, NULL);
+    free(list_entry_path);
     return res;
 }
 

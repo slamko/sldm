@@ -16,4 +16,6 @@ char *get_home(void);
 
 char *get_xconfig(void);
 
+char *get_sldm_config_dir(void);
+
 void cleanup_names(void);
