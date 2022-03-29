@@ -26,9 +26,13 @@ int write_exec_command(FILE *fp) {
     strcpy(exec_line, exec_command);
     exec_line[EXEC_C_LENGTH] = ' ';
     strcpy(exec_line + EXEC_C_LENGTH + 1, add_entry_command);
-    fputs(exec_line, fp);
-    free(exec_line);
 
+    if (fputs(exec_line, fp) == EOF) {
+        free(exec_line);
+        return 1;
+    }
+
+    free(exec_line);
     return 0;
 }
 
@@ -36,12 +40,12 @@ int copy_base_config(char *new_entry_path) {
     char xconfig_ch;
     FILE *xinitrc;
     FILE *new_entry;
-    int res;
+    int res = 1;
 
     if (access(get_xconfig(), R_OK)) {
         new_entry = fopen(new_entry_path, "w");
         if (!new_entry)
-            return 1;
+            return res;
 
         res = write_exec_command(new_entry);
 
@@ -52,7 +56,7 @@ int copy_base_config(char *new_entry_path) {
     xinitrc = fopen(get_xconfig(), "r");
     new_entry = fopen(new_entry_path, "w");
     if (!new_entry)
-        return 1;
+        return res;
 
     while ((xconfig_ch = fgetc(xinitrc)) != EOF) {
         fputc(xconfig_ch, new_entry);
@@ -71,18 +75,18 @@ int entry_invalid(char *new_entry) {
 
 int add_entry(char *new_entry) {
     char *new_entry_path;
-    int res;
+    int res = 1;
 
     if (entry_invalid(new_entry)) 
-        return 1;
+        return res;
 
     new_entry_path = sldm_config_append(new_entry);
     if (!new_entry_path)
-        return 1;
+        return res;
 
     if (access(new_entry_path, W_OK) == 0) {
         error("Entry with name '%s' already exists.", new_entry);
-        return 1;
+        return res;
     }
     
     res = copy_base_config(new_entry_path);
@@ -95,14 +99,14 @@ int add_entry(char *new_entry) {
 
 int remove_entry(char *entry_name) {
     char *remove_entry_path;
-    int res;
+    int res = 1;
     
     if (entry_invalid(entry_name)) 
-        return 1;
+        return res;
 
     remove_entry_path = sldm_config_append(entry_name);
     if (!remove_entry_path)
-        return 1;
+        return res;
 
     res = remove(remove_entry_path);
     if (!res) 
@@ -111,6 +115,11 @@ int remove_entry(char *entry_name) {
         error("No entry found with name: '%s'", entry_name);
         
     free(remove_entry_path);
+    return res;
+}
+
+int list_entries(void) {
+    int res = 1;
     return res;
 }
 

@@ -31,7 +31,8 @@ int not_in_tty() {
 enum target {
     ADD_ENTRY = 0,
     REMOVE_ENTRY = 1,
-    PROMPT = 2
+    LIST_ENTRIES = 2,
+    PROMPT = 3
 };
 
 struct args {
@@ -112,15 +113,19 @@ int main(int argc, char** argv) {
     case REMOVE_ENTRY:
         res = remove_entry(args->entry_name);
         break;
+    case LIST_ENTRIES:
+        res = list_entries();
+        break;
     case PROMPT:
         if (not_in_tty()) {
             error_not_in_tty();
             clean(args);
-            return 1;
+            return res;
         }
         res = prompt(args->entry_name);
         break;
     }
- 
+
+    clean(args);
     return res;
 }

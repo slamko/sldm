@@ -6,4 +6,6 @@ int add_entry(char *entry_name);
 
 int remove_entry(char *entry_name);
 
+int list_entries(void);
+
 int prompt(char *entry_name);
