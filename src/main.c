@@ -4,12 +4,14 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <errno.h>
+#include <signal.h>
 #include "xconfig-names.h"
 #include "log-utils.h"
 #include "command-names.h"
 
 extern int errno;
 char *add_entry_command;
+char **entry_table_buf;
 
 int write_exec_command(FILE *fp) {
     char *exec_line;
@@ -131,43 +133,129 @@ int list_entries(char *entry_name) {
     return res;
 }
 
+void start_x(char *entry_name) {
+    char *entry_config_path;
+    int pid;
+
+    entry_config_path = sldm_config_append(entry_name);
+
+    if (!entry_config_path)
+        exit(1);
+
+    if (access(entry_config_path, R_OK)) {
+        printf("pasth: %s", entry_config_path);
+        error("No entry found with a given name\n");
+        exit(1);
+    }
+
+    pid = fork();
+    if (pid == -1) 
+        exit(1);
+
+    if (pid == 0) 
+        execl("/bin/startx", "/bin/startx", entry_config_path, NULL);
+    else {
+        free(entry_config_path);
+        if (entry_table_buf)
+            free(entry_table_buf);
+
+        exit(0);
+    }
+}
+
+void force_runx_x() {
+    start_x(entry_table_buf[0]);
+    exit(0);
+}
+
+void prompt_number(int entry_count) {
+    int selected_entry;
+    int timer_pid;
+    printf("Enter an entry number (default=0): ");
+    timer_pid = fork();
+
+    if (timer_pid == 0) {
+        sleep(10);
+        kill(getppid(), SIGUSR1);
+    } else {
+        struct sigaction sa = { 0 };
+        sa.sa_flags = SA_RESTART;
+        sa.sa_handler = &force_runx_x;
+        sigaction(SIGUSR1, &sa, NULL);
+
+        int match = scanf("%d", &selected_entry);
+
+        if (match != 1 || selected_entry > entry_count || selected_entry < 0) {
+            error("Invalid entry number");
+            return prompt_number(entry_count);
+        } else if (selected_entry > 0) {
+            printf("%s", entry_table_buf[selected_entry - 1]);
+            start_x(entry_table_buf[selected_entry - 1]);
+        }
+    }
+}
+
 int prompt(char *entry_name) {
     int res = 1;
 
     if (!entry_invalid(entry_name)) {
-        char *entry_config_path;
-        entry_config_path = sldm_config_append(entry_name);
-
-        if (!entry_config_path)
-            return res;
-
-        if (access(entry_config_path, R_OK)) 
-            return res;
-
-        res = execl("/bin/startx", "/bin/startx", entry_config_path, NULL);
-        free(entry_config_path);
+        start_x(entry_name);
         return res;
     }
 
-    FILE* ls;
-    char prompt_entry_name[256];
-    char *ls_command = concat("/bin/ls --sort=time --time=creation -tr ", get_sldm_config_dir());
-    int entry_count = 0;
+    FILE *ls;
+    DIR *edir;
+    struct dirent *entry; 
+    char *ls_command;
+    char tmp_buf[ENTRY_BUF_SIZE];
+    int entry_count = 0;   
+
+    edir = opendir(get_sldm_config_dir());
+    if (!edir)
+        return res;
+
+    while ((entry = readdir(edir))) {
+        if (entry->d_type == DT_REG)
+            entry_count++;
+    }
+    closedir(edir);
+
+    entry_table_buf = (char **)calloc(entry_count, sizeof(char *));
+    for (int i = 0; i < entry_count; i++) {
+        entry_table_buf[i] = (char *)calloc(ENTRY_BUF_SIZE, sizeof(char));
+    }
+
+    if (!entry_table_buf)
+        return res;
+
+    entry_count = 0;
+    ls_command = concat("/bin/ls --sort=time --time=creation -tr ", get_sldm_config_dir());
 
     ls = popen(ls_command, "r");
     if (!ls) 
         return res;
 
     printf("Choose an entry: \n");
-    while (fgets(prompt_entry_name, sizeof(prompt_entry_name), ls) != 0) {
-        entry_count++;
-        printf("(%d) %s", entry_count, prompt_entry_name);
-    }
 
-    printf("(0) Exit\n");
-    printf("Enter an entry number (default=1): ");
+    while (fgets(tmp_buf, ENTRY_BUF_SIZE, ls) != 0) {
+        printf("(%d) %s", entry_count + 1, tmp_buf);
+        strcpy(entry_table_buf[entry_count], tmp_buf);
+        for (int i = strlen(entry_table_buf[entry_count]); i < ENTRY_BUF_SIZE; i++) {
+            entry_table_buf[entry_count][i] = '\0';
+        }
+        
+        entry_count++;
+    }
 
     pclose(ls); 
     free(ls_command);
-    return res;
+
+    printf("(0) Exit\n");
+
+    prompt_number(entry_count);
+    for (int i = 0; i < entry_count; i++) {
+        free(entry_table_buf[i]);
+    }
+    free(entry_table_buf);
+    return 0;
 }

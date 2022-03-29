@@ -3,3 +3,4 @@
 #define LIST_ENTRIES_ARG "list-entries"
 #define EXEC_C "\nexec"
 #define EXEC_C_LENGTH 5
+#define ENTRY_BUF_SIZE 256

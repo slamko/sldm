@@ -28,13 +28,27 @@ char *get_home(void) {
 char *concat(const char *base, const char *appends) {
     const size_t len1 = strlen(base);
     const size_t len2 = strlen(appends);
-    char *result = malloc(len1 + len2 + 1);
+    char *result = calloc(len1 + len2 + 1, sizeof(char));
 
     if (!result) 
         die("Out of memory");
     
-    memcpy(result, base, len1);
-    memcpy(result + len1, appends, len2 + 1);
+    strcpy(result, base);
+    strcpy(result + len1, appends);
+    return result;
+}
+
+char *slash_concat(const char *base, const char *appends) {
+    const size_t len1 = strlen(base);
+    const size_t len2 = strlen(appends);
+    char *result = malloc(len1 + len2 + 2);
+
+    if (!result) 
+        die("Out of memory");
+    
+    strcpy(result, base);
+    result[len1] = '/';
+    memcpy(result + len1 + 1, appends, len2 + 1);
     return result;
 }
 
