@@ -125,10 +125,10 @@ int list_entries(char *entry_name) {
     int res = 1;
 
     if (entry_invalid(entry_name))
-        return execl("/bin/ls", "/bin/ls", get_sldm_config_dir(), NULL);
+        return execl(LS_BIN, LS_BIN, get_sldm_config_dir(), NULL);
     
     list_entry_path = sldm_config_append(entry_name);
-    res = execl("/bin/ls", "/bin/ls", list_entry_path, NULL);
+    res = execl(LS_BIN, LS_BIN, list_entry_path, NULL);
     free(list_entry_path);
     return res;
 }
@@ -143,7 +143,6 @@ void start_x(char *entry_name) {
         exit(1);
 
     if (access(entry_config_path, R_OK)) {
-        printf("pasth: %s", entry_config_path);
         error("No entry found with a given name\n");
         exit(1);
     }
@@ -153,7 +152,7 @@ void start_x(char *entry_name) {
         exit(1);
 
     if (pid == 0) 
-        execl("/bin/startx", "/bin/startx", entry_config_path, NULL);
+        execl(STARTX, STARTX, entry_config_path, NULL);
     else {
         free(entry_config_path);
         if (entry_table_buf)
@@ -163,16 +162,9 @@ void start_x(char *entry_name) {
     }
 }
 
-void force_runx_x() {
+void force_runx() {
     start_x(entry_table_buf[0]);
     exit(0);
-}
-
-int timer = 10 + 1;
-
-void update_timer() {
-    printf("\rEnter an entry number (%ds): ", timer - 1);
-    timer--;
 }
 
 void prompt_number(int entry_count) {
@@ -183,35 +175,26 @@ void prompt_number(int entry_count) {
     if (timer_pid == 0) {
         int timer = 10;
         for (int i = timer + 1; i > 0; i--) {
-            kill(getppid(), SIGUSR2);
+            printf("\rEnter an entry number (%ds): ", i - 1);
+            fflush(stdout);
             sleep(1);
         }
         printf("\n");
         kill(getppid(), SIGUSR1);
     } else {
         struct sigaction sa1 = { 0 };
-        struct sigaction sa2 = { 0 };
-
-        //sa1.sa_flags = SA_RESTART;
-        sa1.sa_handler = &force_runx_x;
+        sa1.sa_handler = &force_runx;
         sigaction(SIGUSR1, &sa1, NULL);
 
-        //sa2.sa_flags = SA_RESTART;
-        sa2.sa_handler = &update_timer;
-        sigaction(SIGUSR2, &sa2, NULL);
-
-        sleep(10);
         int match = scanf("%d", &selected_entry);
 
+        kill(timer_pid, SIGKILL);
         if (match != 1 || selected_entry > entry_count || selected_entry < 0) {
             error("Invalid entry number");
-            kill(timer_pid, SIGKILL);
             return prompt_number(entry_count);
         } else if (selected_entry > 0) {
-            printf("%s", entry_table_buf[selected_entry - 1]);
             start_x(entry_table_buf[selected_entry - 1]);
         }
-        kill(timer_pid, SIGKILL);
     }
 }
 
@@ -227,7 +210,6 @@ int prompt(char *entry_name) {
     DIR *edir;
     struct dirent *entry; 
     char *ls_command;
-    char tmp_buf[ENTRY_BUF_SIZE];
     int entry_count = 0;   
 
     edir = opendir(get_sldm_config_dir());
@@ -249,7 +231,7 @@ int prompt(char *entry_name) {
         return res;
 
     entry_count = 0;
-    ls_command = concat("/bin/ls --sort=time --time=creation -tr ", get_sldm_config_dir());
+    ls_command = concat(ENTRY_SORT, get_sldm_config_dir());
 
     ls = popen(ls_command, "r");
     if (!ls) 
@@ -257,9 +239,8 @@ int prompt(char *entry_name) {
 
     printf("Choose an entry (default: 1):\n");
 
-    while (fgets(tmp_buf, ENTRY_BUF_SIZE, ls) != 0) {
-        printf("(%d) %s", entry_count + 1, tmp_buf);
-        strcpy(entry_table_buf[entry_count], tmp_buf);
+    while (fgets(entry_table_buf[entry_count], ENTRY_BUF_SIZE, ls) != 0) {
+        printf("(%d) %s", entry_count + 1, entry_table_buf[entry_count]);
         for (int i = strlen(entry_table_buf[entry_count]) - 1; i < ENTRY_BUF_SIZE; i++) {
             entry_table_buf[entry_count][i] = '\0';
         }
@@ -270,7 +251,7 @@ int prompt(char *entry_name) {
     pclose(ls); 
     free(ls_command);
 
-    printf("(0) Exit\n");
+    printf("\n(0) Exit\n");
 
     prompt_number(entry_count);
     for (int i = 0; i < entry_count; i++) {
