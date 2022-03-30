@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include "xconfig-names.h"
+#include "config-names.h"
 
 void error(const char* err_format, ...) {
     va_list args;

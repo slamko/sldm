@@ -1,0 +1,1 @@
+int prompt(char *entry_name);

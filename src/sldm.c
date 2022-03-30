@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "xconfig-names.h"
+#include "config-names.h"
 #include "log-utils.h"
 #include "main.h"
 
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
         res = prompt(args->entry_name);
         break;
     }
-
+    
     clean(args);
     return res;
 }

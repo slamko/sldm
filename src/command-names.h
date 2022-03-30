@@ -12,3 +12,5 @@
 #define EXEC_C "\nexec"
 #define EXEC_C_LENGTH 5
 #define ENTRY_BUF_SIZE 256
+
+int entry_invalid(char *new_entry);

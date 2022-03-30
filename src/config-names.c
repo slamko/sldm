@@ -1,4 +1,3 @@
-//#define _POSIX_SOURCE
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,22 +5,15 @@
 #include <dirent.h>
 #include <errno.h>
 #include <sys/stat.h>
-#include "xconfig-names.h"
+#include "config-names.h"
 #include "log-utils.h"
 
 char *home = NULL;
 
 char *get_home(void) {
-    if (!home) {
-        char *home_var = getenv("HOME");
-        home = (char *)malloc(263);
-        strcpy(home, home_var);
-        for (int i = 0; i < 26; i++)
-        {
-            /* code */
-        }
-        
-    }
+    if (!home)
+        home = getenv("HOME");        
+    
     return home;
 }
 
@@ -93,7 +85,4 @@ void cleanup_names(void) {
     
     if (sldm_config_dir)
         free(sldm_config_dir);
-
-    if (home) 
-        free(home);
 }
