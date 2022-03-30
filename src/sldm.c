@@ -7,7 +7,7 @@
 #include "main.h"
 
 int not_in_tty() {
-    FILE* fp;
+    FILE* fp = NULL;
     int cmp = -1;
     char tty_output[128];
 
@@ -16,11 +16,12 @@ int not_in_tty() {
         return cmp;
 
     if (fgets(tty_output, sizeof(tty_output), fp) != 0) {
-        char tty[9];
+        char tty[9] = "";
+        char *tty_exp;
         strncpy(tty, tty_output, TTY_DEVICE_NAME_BYTES);
         tty[9] = '\0';
 
-        char *tty_exp = TTY_DEVICE;
+        tty_exp = TTY_DEVICE;
         cmp = strcmp(tty, tty_exp);
     }
 

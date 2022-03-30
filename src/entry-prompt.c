@@ -47,17 +47,18 @@ int start_x(char *entry_name) {
         return 1;
     }
 
-    if (pid == 0) 
+    if (pid == 0)
         execl(STARTX, STARTX, entry_config_path, NULL);
-    else {
-        startx_free(entry_config_path);
-        return 0;
-    }
+
+    free(entry_config_path);
     return 0;
 }
 
 void force_runx() {
     int st = start_x(entry_table_buf[0]);
+    if (entry_table_buf)
+        entry_table_buf_dealloc();
+        
     exit(st);
 }
 
@@ -104,6 +105,7 @@ int prompt(char *entry_name) {
     DIR *edir;
     struct dirent *entry; 
     char *ls_command; 
+    int initial_entry_count;
 
     edir = opendir(get_sldm_config_dir());
     if (!edir)
@@ -113,6 +115,7 @@ int prompt(char *entry_name) {
         if (entry->d_type == DT_REG)
             entry_count++;
     }
+    initial_entry_count = entry_count;
     closedir(edir);
 
     entry_table_buf = (char **)calloc(entry_count, sizeof(char *));
@@ -132,7 +135,7 @@ int prompt(char *entry_name) {
 
     printf("Choose an entry (default: 1):\n");
 
-    while (fgets(entry_table_buf[entry_count], ENTRY_BUF_SIZE, ls) != 0) {
+    while (entry_count < initial_entry_count && fgets(entry_table_buf[entry_count], ENTRY_BUF_SIZE, ls) != 0) {
         printf("(%d) %s", entry_count + 1, entry_table_buf[entry_count]);
         for (int i = strlen(entry_table_buf[entry_count]) - 1; i < ENTRY_BUF_SIZE; i++) {
             entry_table_buf[entry_count][i] = '\0';
