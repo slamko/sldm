@@ -44,6 +44,29 @@ void print_usage() {
     printf("usage: \n");
 }
 
+int cmp_command(const char *command, const char *cmp) {
+    int cmlen;
+    int cmplen;
+
+    if (!command || !cmp)
+        return 1;
+
+    cmlen = strlen(command);
+    cmplen = strlen(cmp);
+
+    if (cmlen > cmplen)
+        return 1;
+    else if (cmlen == cmplen) 
+        return strcmp(command, cmp);
+    
+    for (int i = 0; i < strlen(command); i++)
+    {
+        if (command[i] != cmp[i])
+            return 1; 
+    }
+    return 0;
+}
+
 int parse_args(int argc, char **argv, struct args *args) {
     char *target;
     args->target = PROMPT;
@@ -60,7 +83,7 @@ int parse_args(int argc, char **argv, struct args *args) {
         args->target = PROMPT;
     } else {
         target = argv[1];
-        if (!strcmp(target, ADD_ENTRY_ARG)) {
+        if (!cmp_command(target, ADD_ENTRY_ARG)) {
             if (argc != 4) {
                 print_usage();
                 return 1;
@@ -69,7 +92,7 @@ int parse_args(int argc, char **argv, struct args *args) {
             args->target = ADD_ENTRY;
             args->entry_name = argv[2];
             add_entry_command = argv[3];
-        } else if (!strcmp(target, REMOVE_ENTRY_ARG)) {
+        } else if (!cmp_command(target, REMOVE_ENTRY_ARG)) {
             if (argc != 3) {
                 print_usage();
                 return 1;
@@ -77,7 +100,7 @@ int parse_args(int argc, char **argv, struct args *args) {
     
             args->target = REMOVE_ENTRY;
             args->entry_name = argv[2];
-        } else if (!strcmp(target, LIST_ENTRIES_ARG)) {
+        } else if (!cmp_command(target, LIST_ENTRIES_ARG)) {
             args->target = LIST_ENTRIES;
             args->entry_name = argv[2];
         } else {
