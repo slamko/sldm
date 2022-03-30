@@ -87,6 +87,7 @@ int add_entry(char *new_entry) {
 
     if (access(new_entry_path, W_OK) == 0) {
         error("Entry with name '%s' already exists.", new_entry);
+        free(new_entry_path);
         return res;
     }
     
