@@ -168,30 +168,50 @@ void force_runx_x() {
     exit(0);
 }
 
+int timer = 10 + 1;
+
+void update_timer() {
+    printf("\rEnter an entry number (%ds): ", timer - 1);
+    timer--;
+}
+
 void prompt_number(int entry_count) {
     int selected_entry;
     int timer_pid;
-    printf("Enter an entry number (default=0): ");
     timer_pid = fork();
 
     if (timer_pid == 0) {
-        sleep(10);
+        int timer = 10;
+        for (int i = timer + 1; i > 0; i--) {
+            kill(getppid(), SIGUSR2);
+            sleep(1);
+        }
+        printf("\n");
         kill(getppid(), SIGUSR1);
     } else {
-        struct sigaction sa = { 0 };
-        sa.sa_flags = SA_RESTART;
-        sa.sa_handler = &force_runx_x;
-        sigaction(SIGUSR1, &sa, NULL);
+        struct sigaction sa1 = { 0 };
+        struct sigaction sa2 = { 0 };
 
+        //sa1.sa_flags = SA_RESTART;
+        sa1.sa_handler = &force_runx_x;
+        sigaction(SIGUSR1, &sa1, NULL);
+
+        //sa2.sa_flags = SA_RESTART;
+        sa2.sa_handler = &update_timer;
+        sigaction(SIGUSR2, &sa2, NULL);
+
+        sleep(10);
         int match = scanf("%d", &selected_entry);
 
         if (match != 1 || selected_entry > entry_count || selected_entry < 0) {
             error("Invalid entry number");
+            kill(timer_pid, SIGKILL);
             return prompt_number(entry_count);
         } else if (selected_entry > 0) {
             printf("%s", entry_table_buf[selected_entry - 1]);
             start_x(entry_table_buf[selected_entry - 1]);
         }
+        kill(timer_pid, SIGKILL);
     }
 }
 
@@ -235,12 +255,12 @@ int prompt(char *entry_name) {
     if (!ls) 
         return res;
 
-    printf("Choose an entry: \n");
+    printf("Choose an entry (default: 1):\n");
 
     while (fgets(tmp_buf, ENTRY_BUF_SIZE, ls) != 0) {
         printf("(%d) %s", entry_count + 1, tmp_buf);
         strcpy(entry_table_buf[entry_count], tmp_buf);
-        for (int i = strlen(entry_table_buf[entry_count]); i < ENTRY_BUF_SIZE; i++) {
+        for (int i = strlen(entry_table_buf[entry_count]) - 1; i < ENTRY_BUF_SIZE; i++) {
             entry_table_buf[entry_count][i] = '\0';
         }
         
