@@ -2,3 +2,4 @@
 sldm
 *.o
 *.out
+build/

@@ -110,7 +110,6 @@ int remove_entry(char *entry_name) {
     if (!remove_entry_path)
         return res;
 
-
     res = remove(remove_entry_path);
     if (!res) 
         printf("Entry with name '%s' was removed\n", entry_name);
