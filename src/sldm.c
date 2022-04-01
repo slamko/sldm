@@ -2,9 +2,32 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <wordexp.h>
+#include <stdbool.h>
 #include "config-names.h"
 #include "log-utils.h"
 #include "main.h"
+
+#include "../config.h"
+
+#ifdef PROMPT_TIMEOUT
+int prompt_timeout = PROMPT_TIMEOUT;
+#else
+int prompt_timeout = 10;
+#endif
+
+#ifdef DEFAULT_ENTRY
+int default_entry = DEFAULT_ENTRY;
+#else
+int default_entry = 1;
+#endif
+
+#ifdef BASE_XCONFIG
+char *base_xconfig = BASE_XCONFIG;
+#else
+char *base_xconfig = NULL;
+#define CONFIG_UNDEFINED 
+#endif
 
 int not_in_tty() {
     FILE* fp = NULL;
@@ -117,8 +140,46 @@ int parse_args(int argc, char **argv, struct args *args) {
     return 0;
 }
 
+int check_prompt_config() {
+    if (default_entry <= 0) {
+        error("Invalid default entry (%d)", default_entry);
+        return 1;
+    }
+
+    if (prompt_timeout < 0) {
+        error("Invalid prompt timeout (%d)", prompt_timeout);
+        return 1;
+    }
+    return 0;
+}
+
+int check_xconfig() {
+    wordexp_t exp_result;
+    base_xconfig = XINITRC_L;
+    wordexp(base_xconfig, &exp_result, 0);
+    if (access(exp_result.we_wordv[0], R_OK)){
+        #ifndef CONFIG_UNDEFINED
+        error("Unable to acces xinitrc at path %s", exp_result.we_wordv[0]);
+        wordfree(&exp_result);
+        return 1;
+        #else
+        base_xconfig = NULL;
+        wordfree(&exp_result);
+        return 0;
+        #endif
+    }
+
+    base_xconfig = strdup(exp_result.we_wordv[0]);
+    
+    wordfree(&exp_result);
+    return 0;
+}
+
 void clean(struct args *arg) {
     cleanup_names();
+    if (base_xconfig)
+        free(base_xconfig);
+        
     free(arg);
 }
 
@@ -127,14 +188,15 @@ int main(int argc, char** argv) {
     int res = 1;
 
     args = (struct args *)malloc(sizeof(struct args));
-    if (parse_args(argc, argv, args)) {
-        clean(args);
-        return res;
-    }
+    if (parse_args(argc, argv, args))
+        goto clean_and_exit;
 
     switch (args->target)
     {
     case ADD_ENTRY:
+        if (check_xconfig())
+            goto clean_and_exit;
+
         res = add_entry(args->entry_name);
         break;
     case REMOVE_ENTRY:
@@ -144,15 +206,18 @@ int main(int argc, char** argv) {
         res = list_entries(args->entry_name);
         break;
     case PROMPT:
+        if (check_prompt_config())
+            goto clean_and_exit;
+
         if (not_in_tty()) {
             error_not_in_tty();
-            clean(args);
-            return res;
+            goto clean_and_exit;
         }
         res = prompt(args->entry_name);
         break;
     }
-    
+
+clean_and_exit:  
     clean(args);
     return res;
 }

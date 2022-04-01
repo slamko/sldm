@@ -13,6 +13,9 @@ int entry_count = 0;
 char **entry_table_buf = NULL;
 
 void entry_table_buf_dealloc() {
+    if (!entry_table_buf)
+        return;
+
     for (int i = 0; i < entry_count; i++) {
         free(entry_table_buf[i]);
     }
@@ -54,21 +57,34 @@ int start_x(char *entry_name) {
     return 0;
 }
 
-void force_runx() {
-    int st = start_x(entry_table_buf[0]);
+void exit_on_runx(int res) {
     if (entry_table_buf)
         entry_table_buf_dealloc();
         
-    exit(st);
+    exit(res);
+}
+
+void force_runx() {
+    int res = 1;
+
+    if (default_entry > entry_count || default_entry <= 0) {
+        error("Invalid default entry (%d)", default_entry);
+        exit_on_runx(res);
+    }
+
+    res = start_x(entry_table_buf[default_entry - 1]);
+
+    exit_on_runx(res);
 }
 
 int prompt_number() {
     int selected_entry;
     int timer_pid;
+
     timer_pid = fork();
 
     if (timer_pid == 0) {
-        int timer = 10;
+        int timer = prompt_timeout;
         for (int i = timer + 1; i > 0; i--) {
             printf("\rEnter an entry number (%ds): ", i - 1);
             fflush(stdout);
@@ -133,7 +149,7 @@ int prompt(char *entry_name) {
     if (!ls) 
         return res;
 
-    printf("Choose an entry (default: 1):\n");
+    printf("Choose an entry (default: %d):\n", default_entry);
 
     while (entry_count < initial_entry_count && fgets(entry_table_buf[entry_count], ENTRY_BUF_SIZE, ls) != 0) {
         printf("(%d) %s", entry_count + 1, entry_table_buf[entry_count]);

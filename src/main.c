@@ -43,7 +43,7 @@ int copy_base_config(char *new_entry_path) {
     FILE *new_entry;
     int res = 1;
 
-    if (access(get_xconfig(), R_OK)) {
+    if (!get_xconfig() || access(get_xconfig(), R_OK)) {
         new_entry = fopen(new_entry_path, "w");
         if (!new_entry)
             return res;

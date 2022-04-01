@@ -76,7 +76,7 @@ char *sldm_config_append(char *appends) {
 }
 
 char *get_xconfig(void) {
-    return get_xinitrc_l();
+    return base_xconfig;
 }
 
 void cleanup_names(void) {
