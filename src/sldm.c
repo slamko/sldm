@@ -13,13 +13,13 @@
 #ifdef PROMPT_TIMEOUT
 int prompt_timeout = PROMPT_TIMEOUT;
 #else
-int prompt_timeout = 10;
+int prompt_timeout = _PROMPT_TIMEOUT;
 #endif
 
 #ifdef DEFAULT_ENTRY
 int default_entry = DEFAULT_ENTRY;
 #else
-int default_entry = 1;
+int default_entry = _DEFAULT_ENTRY;
 #endif
 
 #ifdef BASE_XCONFIG
@@ -106,6 +106,24 @@ int parse_args(int argc, char **argv, struct args *args) {
     if (argc == 1) {
         args->target = PROMPT;
     } else {
+        int opt;
+
+        while((opt = getopt(argc, argv, "r:")) != -1) 
+        { 
+            switch(opt) 
+            { 
+            case 'r':
+                args->target = PROMPT;
+                args->entry_name = optarg;
+                return 0;
+                break; 
+            case '?':
+                print_usage();
+                return 1;
+                break;
+            }
+        } 
+
         target = argv[1];
         if (!cmp_command(target, ADD_ENTRY_ARG)) {
             if (argc != 4) {
@@ -133,10 +151,6 @@ int parse_args(int argc, char **argv, struct args *args) {
         }
     }
 
-    for (int argi = 3; argi < argc; argi++) {
-        //parsing args
-    }
-
     return 0;
 }
 
@@ -155,23 +169,26 @@ int check_prompt_config() {
 
 int check_xconfig() {
     wordexp_t exp_result;
+    char *expanded_config;
+
+    #ifdef CONFIG_UNDEFINED
     base_xconfig = XINITRC_L;
+    #endif
     wordexp(base_xconfig, &exp_result, 0);
-    if (access(exp_result.we_wordv[0], R_OK)){
+    expanded_config = strdup(exp_result.we_wordv[0]);
+    wordfree(&exp_result);
+
+    if (access(expanded_config, R_OK)){
         #ifndef CONFIG_UNDEFINED
         error("Unable to acces xinitrc at path %s", exp_result.we_wordv[0]);
-        wordfree(&exp_result);
         return 1;
         #else
         base_xconfig = NULL;
-        wordfree(&exp_result);
         return 0;
         #endif
     }
 
-    base_xconfig = strdup(exp_result.we_wordv[0]);
-    
-    wordfree(&exp_result);
+    base_xconfig = expanded_config;
     return 0;
 }
 

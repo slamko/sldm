@@ -1,7 +1,11 @@
-#define XINITRC_L "~/.xinitrc"
 #define XINITRC_ETC "/etc/X11/xinit/xinitrc"
 #define XINITRC_ETC_D "/etc/X11/xinit/xinitrc.d"
 #define SLDM_CONFIG "/.config/sldm/"
+
+// Default config values
+#define XINITRC_L "~/.xinitrc"
+#define _DEFAULT_ENTRY 1
+#define _PROMPT_TIMEOUT 10
 
 extern int prompt_timeout;
 extern int default_entry;
