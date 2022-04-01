@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <errno.h>
+#include <curses.h>
 #include <signal.h>
 #include "config-names.h"
 #include "log-utils.h"
@@ -93,11 +94,17 @@ int prompt_number() {
         printf("\n");
         kill(getppid(), SIGUSR1);
     } else {
+        int match;
+        char ch;
         struct sigaction sa1 = { 0 };
         sa1.sa_handler = &force_runx;
         sigaction(SIGUSR1, &sa1, NULL);
 
-        int match = scanf("%d", &selected_entry);
+        match = scanf("%d", &selected_entry);
+        while ((ch = fgetc(stdin)) != EOF) {
+            if (ch == '\n')
+                break;
+        }
 
         kill(timer_pid, SIGKILL);
         if (match != 1 || selected_entry > entry_count || selected_entry < 0) {
