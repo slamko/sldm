@@ -66,7 +66,12 @@ struct args {
 };
 
 void print_usage() {
-    printf("usage: \n");
+    printf(" Usage: \n");
+    printf("\tsldm add <entry> <exec>\n");
+    printf("\tsldm remove <entry>\n");
+    printf("\tsldm list [entry]\n");
+    printf("\tsldm show <entry>\n");
+    printf("\tsldm [entry] - Enter the menu screen\n");
 }
 
 int cmp_command(const char *command, const char *cmp) {
