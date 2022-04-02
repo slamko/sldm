@@ -79,8 +79,10 @@ int add_entry(char *new_entry) {
     char *new_entry_path;
     int res = 1;
 
-    if (entry_invalid(new_entry)) 
+    if (entry_invalid(new_entry)) { 
+        error_invalid_entry();
         return res;
+    }
 
     new_entry_path = sldm_config_append(new_entry);
     if (!new_entry_path)
@@ -104,8 +106,10 @@ int remove_entry(char *entry_name) {
     char *remove_entry_path;
     int res = 1;
     
-    if (entry_invalid(entry_name)) 
+    if (entry_invalid(entry_name)) {
+        error_invalid_entry();
         return res;
+    }
 
     remove_entry_path = sldm_config_append(entry_name);
     if (!remove_entry_path)
@@ -152,3 +156,35 @@ cleanup:
     free(list_entry_path);
     return res;
 }
+
+int show_entry(char *entry_name) {
+    char *show_entry_path;
+    int res;
+    int exec;
+
+    if (entry_invalid(entry_name)) {
+        error_invalid_entry();
+        return 1;
+    }
+
+    show_entry_path = sldm_config_append(entry_name);
+    if ((res = access(show_entry_path, R_OK))) {
+        error("Unable to access file at path: %s", show_entry_path);
+        goto cleanup;
+    }
+
+    exec = fork();
+    if (exec == -1)
+        goto cleanup;
+
+    if (exec == 0)
+        execl(CAT_BIN, CAT_BIN, show_entry_path, NULL);
+
+    wait(&res);
+    printf("\n");
+
+cleanup:
+    free(show_entry_path);
+    return res;
+}
+

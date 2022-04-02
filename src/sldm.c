@@ -56,7 +56,8 @@ enum target {
     ADD_ENTRY = 0,
     REMOVE_ENTRY = 1,
     LIST_ENTRIES = 2,
-    PROMPT = 3
+    SHOW_ENTRY = 3,
+    PROMPT = 4
 };
 
 struct args {
@@ -126,7 +127,7 @@ int parse_args(int argc, char **argv, struct args *args) {
 
         target = argv[1];
         if (!cmp_command(target, ADD_ENTRY_ARG)) {
-            if (argc != 4) {
+            if (argc < 4) {
                 print_usage();
                 return 1;
             }
@@ -135,7 +136,7 @@ int parse_args(int argc, char **argv, struct args *args) {
             args->entry_name = argv[2];
             add_entry_command = argv[3];
         } else if (!cmp_command(target, REMOVE_ENTRY_ARG)) {
-            if (argc != 3) {
+            if (argc < 3) {
                 print_usage();
                 return 1;
             }
@@ -144,6 +145,14 @@ int parse_args(int argc, char **argv, struct args *args) {
             args->entry_name = argv[2];
         } else if (!cmp_command(target, LIST_ENTRIES_ARG)) {
             args->target = LIST_ENTRIES;
+            args->entry_name = argv[2];
+        } else if (!cmp_command(target, SHOW_ENTRY_ARG)) {
+            if (argc < 3) {
+                print_usage();
+                return 1;
+            }
+
+            args->target = SHOW_ENTRY;
             args->entry_name = argv[2];
         } else {
             args->target = PROMPT;
@@ -221,6 +230,9 @@ int main(int argc, char** argv) {
         break;
     case LIST_ENTRIES:
         res = list_entries(args->entry_name);
+        break;
+    case SHOW_ENTRY:
+        res = show_entry(args->entry_name);
         break;
     case PROMPT:
         if (check_prompt_config())
