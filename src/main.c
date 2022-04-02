@@ -5,6 +5,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <signal.h>
+#include <sys/wait.h>
 #include "config-names.h"
 #include "log-utils.h"
 #include "command-names.h"
@@ -123,12 +124,31 @@ int remove_entry(char *entry_name) {
 int list_entries(char *entry_name) {
     char *list_entry_path;
     int res = 1;
+    int exec = -1;
 
-    if (entry_invalid(entry_name))
-        return execl(LS_BIN, LS_BIN, get_sldm_config_dir(), NULL);
-    
+    if (entry_invalid(entry_name)) {
+        exec = fork();
+        if (exec == -1)
+            return res;
+
+        if (exec == 0) 
+            execl(LS_BIN, LS_BIN, get_sldm_config_dir(), NULL);
+
+        wait(&res);
+        return res;
+    }
+
     list_entry_path = sldm_config_append(entry_name);
-    res = execl(LS_BIN, LS_BIN, list_entry_path, NULL);
+    exec = fork();
+    if (exec == -1)
+        goto cleanup;
+
+    if (exec == 0)
+        execl(LS_BIN, LS_BIN, list_entry_path, NULL);
+
+    wait(&res);
+
+cleanup:
     free(list_entry_path);
     return res;
 }
