@@ -18,21 +18,17 @@ void entry_table_buf_dealloc() {
         return;
 
     for (int i = 0; i < entry_count; i++) {
-        free(entry_table_buf[i]);
+        if (entry_table_buf[i])
+            free(entry_table_buf[i]);
     }
     free(entry_table_buf);
     entry_table_buf = NULL;
 }
 
-void startx_free(char *entry_config_path) {
-    free(entry_config_path);
-    if (entry_table_buf)
-        entry_table_buf_dealloc();
-}
-
 int start_x(char *entry_name) {
     char *entry_config_path;
     int pid;
+    int res = 1;
 
     entry_config_path = sldm_config_append(entry_name);
 
@@ -41,21 +37,27 @@ int start_x(char *entry_name) {
 
     if (access(entry_config_path, R_OK)) {
         error("No entry found with a given name\n");
-        startx_free(entry_config_path);
+        goto cleanup;
         return 1;
     }
 
     pid = fork();
     if (pid == -1) {
-        startx_free(entry_config_path);
+        goto cleanup;
         return 1;
     }
 
     if (pid == 0)
         execl(STARTX, STARTX, entry_config_path, NULL);
 
+    res = !pid;
+
+cleanup:
     free(entry_config_path);
-    return 0;
+    if (entry_table_buf)
+        entry_table_buf_dealloc();
+
+    return res;
 }
 
 void exit_on_runx(int res) {
@@ -101,6 +103,14 @@ int prompt_number() {
         sigaction(SIGUSR1, &sa1, NULL);
 
         match = scanf("%d", &selected_entry);
+
+        char a = fgetc(stdin);
+        printf("\nmatch:%d\nstdin:%c", match, a);
+        if (match != 1 && a == '\n') {
+            kill(timer_pid, SIGKILL);
+            return start_x(entry_table_buf[default_entry - 1]);
+        }
+
         while ((ch = fgetc(stdin)) != EOF) {
             if (ch == '\n')
                 break;
@@ -124,7 +134,7 @@ int prompt(char *entry_name) {
         return start_x(entry_name);
     }
 
-    FILE *ls;
+    FILE *lsp;
     DIR *edir;
     struct dirent *entry; 
     char *ls_command; 
@@ -152,13 +162,13 @@ int prompt(char *entry_name) {
     entry_count = 0;
     ls_command = concat(ENTRY_SORT, get_sldm_config_dir());
 
-    ls = popen(ls_command, "r");
-    if (!ls) 
+    lsp = popen(ls_command, "r");
+    if (!lsp) 
         return res;
 
     printf("Choose an entry (default: %d):\n", default_entry);
 
-    while (entry_count < initial_entry_count && fgets(entry_table_buf[entry_count], ENTRY_BUF_SIZE, ls) != 0) {
+    while (entry_count < initial_entry_count && fgets(entry_table_buf[entry_count], ENTRY_BUF_SIZE, lsp) != 0) {
         printf("(%d) %s", entry_count + 1, entry_table_buf[entry_count]);
         for (int i = strlen(entry_table_buf[entry_count]) - 1; i < ENTRY_BUF_SIZE; i++) {
             entry_table_buf[entry_count][i] = '\0';
@@ -167,7 +177,7 @@ int prompt(char *entry_name) {
         entry_count++;
     }
 
-    pclose(ls); 
+    pclose(lsp); 
     free(ls_command);
 
     printf("\n(0) Exit\n");
