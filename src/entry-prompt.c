@@ -81,7 +81,7 @@ void force_runx() {
 }
 
 int prompt_number() {
-    int selected_entry;
+    int selected_entry = default_entry;
     int timer_pid;
 
     timer_pid = fork();
@@ -96,25 +96,20 @@ int prompt_number() {
         printf("\n");
         kill(getppid(), SIGUSR1);
     } else {
+        char *read;
         int match;
-        char ch;
         struct sigaction sa1 = { 0 };
+        char read_buf[16];
         sa1.sa_handler = &force_runx;
         sigaction(SIGUSR1, &sa1, NULL);
 
-        match = scanf("%d", &selected_entry);
+        read = fgets(read_buf, sizeof(read_buf), stdin);
 
-        char a = fgetc(stdin);
-        printf("\nmatch:%d\nstdin:%c", match, a);
-        if (match != 1 && a == '\n') {
+        if (read && read[0] == '\n') {
             kill(timer_pid, SIGKILL);
             return start_x(entry_table_buf[default_entry - 1]);
         }
-
-        while ((ch = fgetc(stdin)) != EOF) {
-            if (ch == '\n')
-                break;
-        }
+        match = sscanf(read, "%d", &selected_entry);
 
         kill(timer_pid, SIGKILL);
         if (match != 1 || selected_entry > entry_count || selected_entry < 0) {
