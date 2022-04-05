@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <ncurses.h>
 #include "config-names.h"
 
 void error(const char* err_format, ...) {
@@ -14,6 +15,22 @@ void error(const char* err_format, ...) {
 
     vfprintf(stderr, err, args);
     vfprintf(stderr, "\n", args);
+    free(err);
+    va_end(args);
+}
+
+void nerror(const char* err_format, ...) {
+    va_list args;
+    char *err;
+
+    va_start(args, err_format);
+    err = concat("\nerror: ", err_format);
+    if (!err)
+        return;
+
+    printw(err, args);
+    printw("\n");
+    refresh();
     free(err);
     va_end(args);
 }

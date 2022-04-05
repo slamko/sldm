@@ -1,5 +1,5 @@
 #include "command-names.h"
-#include "entry-prompt.h"
+#include "nentry-prompt.h"
 
 extern char *add_entry_command;
 

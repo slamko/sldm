@@ -42,7 +42,7 @@ int start_x(char *entry_name) {
         return res;
 
     if (access(entry_config_path, R_OK)) {
-        error("No entry found with a given name\n");
+        nerror("No entry found with a given name\n");
         goto cleanup;
         return res;
     }
@@ -69,7 +69,7 @@ void force_runx() {
     int res = 1;
 
     if (default_entry > entry_count || default_entry <= 0) {
-        error("Invalid default entry (%d)", default_entry);
+        nerror("Invalid default entry (%d)", default_entry);
         goto cleanup;
     }
 
@@ -126,7 +126,7 @@ int nprompt_number() {
 
         kill(timer_pid, SIGKILL);
         if (match != 1 || selected_entry > entry_count || selected_entry < 0) {
-            error("Invalid entry number");
+            nerror("Invalid entry number");
             return nprompt_number();
         } else if (selected_entry > 0) {
             return start_x(entry_table_buf[selected_entry - 1]);
