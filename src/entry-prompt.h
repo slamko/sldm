@@ -1,3 +1,3 @@
 extern char **entry_table_buf;
 
-int prompt(char *entry_name);
+int nprompt(char *entry_name);

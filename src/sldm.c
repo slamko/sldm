@@ -71,7 +71,7 @@ void print_usage() {
     printf("\tsldm remove <entry>\n");
     printf("\tsldm list [entry]\n");
     printf("\tsldm show <entry>\n");
-    printf("\tsldm [entry] - Enter the menu screen\n");
+    printf("\tsldm [-r] [entry] - Enter the menu screen\n");
 }
 
 int cmp_command(const char *command, const char *cmp) {
@@ -220,13 +220,13 @@ int main(int argc, char** argv) {
 
     args = (struct args *)malloc(sizeof(struct args));
     if (parse_args(argc, argv, args))
-        goto clean_and_exit;
+        goto cleanup;
 
     switch (args->target)
     {
     case ADD_ENTRY:
         if (check_xconfig())
-            goto clean_and_exit;
+            goto cleanup;
 
         res = add_entry(args->entry_name);
         break;
@@ -241,17 +241,17 @@ int main(int argc, char** argv) {
         break;
     case PROMPT:
         if (check_prompt_config())
-            goto clean_and_exit;
+            goto cleanup;
 
         if (not_in_tty()) {
             error_not_in_tty();
-            goto clean_and_exit;
+            goto cleanup;
         }
-        res = prompt(args->entry_name);
+        res = nprompt(args->entry_name);
         break;
     }
 
-clean_and_exit:  
+cleanup:  
     clean(args);
     return res;
 }
