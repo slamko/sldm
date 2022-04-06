@@ -1,6 +1,7 @@
 #define XINITRC_ETC "/etc/X11/xinit/xinitrc"
 #define XINITRC_ETC_D "/etc/X11/xinit/xinitrc.d"
 #define SLDM_CONFIG "/.config/sldm/"
+#define SLDM_CONFIG_ENTRIES "/.config/sldm/entries/"
 
 // Default config values
 #define XINITRC_L "~/.xinitrc"

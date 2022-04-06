@@ -62,7 +62,7 @@ char *sldm_config_dir = NULL;
 
 char *get_sldm_config_dir(void) {
     if (!sldm_config_dir) 
-        sldm_config_dir = home_path_append(SLDM_CONFIG);
+        sldm_config_dir = home_path_append(SLDM_CONFIG_ENTRIES);
 
     struct stat sb;
     if (stat(sldm_config_dir, &sb) && !S_ISDIR(sb.st_mode)) 
