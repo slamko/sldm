@@ -1,8 +1,8 @@
-// Config for Suckless Display manager
+// Config file for Suckless Display manager
 
-#define PROMPT_TIMEOUT 11
+#define PROMPT_TIMEOUT 11               // in seconds
 
-#define DEFAULT_ENTRY 2
+#define DEFAULT_ENTRY 2                 // count starts with 1
 
-// #define BASE_XCONFIG "~/.xinitrc"
+// #define BASE_XCONFIG "~/.xinitrc"    // relative path is accepted
 

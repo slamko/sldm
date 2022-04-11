@@ -66,7 +66,7 @@ char *get_sldm_config_dir(void) {
 
     struct stat sb;
     if (stat(sldm_config_dir, &sb) && !S_ISDIR(sb.st_mode)) 
-        mkdir(sldm_config_dir, 0777);
+        mkdir(sldm_config_dir, S_IRWXU);
 
     return sldm_config_dir;
 }

@@ -5,13 +5,18 @@
 #include <dirent.h>
 #include <errno.h>
 #include <ncurses.h>
+#include <math.h>
 #include <signal.h>
 #include "config-names.h"
 #include "log-utils.h"
 #include "command-names.h"
 
+#define ENTRY_NUMBER_PROMPT "\rEnter an entry number (%s): "
+#define ENTRY_NUMBER_PROMPT_DEFAULT "\rEnter an entry number (default: %d): "
+
 int entry_count = 0;
 char **entry_table_buf = NULL;
+WINDOW *win;
 
 void entry_table_buf_dealloc() {
     if (!entry_table_buf)
@@ -40,6 +45,8 @@ int start_x(char *entry_name) {
 
     if (!entry_config_path)
         return res;
+
+    printw("\nRunning %s ...", entry_name);
 
     if (access(entry_config_path, R_OK)) {
         nerror("No entry found with a given name\n");
@@ -80,20 +87,22 @@ cleanup:
     exit(res);
 }
 
-int nprompt_number() {
+int nprompt_number(char *hint) {
     int selected_entry = default_entry;
     int timer_pid;
+
+    hint ? 
+        printw(ENTRY_NUMBER_PROMPT, hint) : 
+        printw(ENTRY_NUMBER_PROMPT_DEFAULT, default_entry);
 
     timer_pid = fork();
 
     if (timer_pid == 0) {
-        int timer = prompt_timeout;
-        for (int i = timer + 1; i > 0; i--) {
-            printw("\rEnter an entry number (%ds): ", i - 1);
-            refresh();
+        for (int i = prompt_timeout + 1; i > 0; i--)
             sleep(1);
-        }
-        printw("\n");
+
+        printw("\nTimeout expired\n");
+        printw("Using default entry (%d)\n\n", default_entry);
         refresh();
         kill(getppid(), SIGUSR1);
     } else {
@@ -108,7 +117,6 @@ int nprompt_number() {
         for (int i = 0; i < sizeof(read_buf); i++) {
             if (ch == '\n') {
                 read_buf[i] = ch;
-                ch = getch();
                 break;
             } else if (ch != '\n' && ch != EOF) {
                 read_buf[i] = ch;
@@ -126,8 +134,9 @@ int nprompt_number() {
 
         kill(timer_pid, SIGKILL);
         if (match != 1 || selected_entry > entry_count || selected_entry < 0) {
-            nerror("Invalid entry number");
-            return nprompt_number();
+            printw("\r\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
+            refresh();
+            return nprompt_number("Invalid entry number");
         } else if (selected_entry > 0) {
             return start_x(entry_table_buf[selected_entry - 1]);
         }
@@ -137,16 +146,15 @@ int nprompt_number() {
 
 int nprompt(char *entry_name) {
     int res = 1;
-
-    if (!entry_invalid(entry_name)) {
-        return start_x(entry_name);
-    }
-
     FILE *lsp;
     DIR *edir;
     struct dirent *entry; 
     char *ls_command; 
     int initial_entry_count;
+
+    if (!entry_invalid(entry_name)) {
+        return start_x(entry_name);
+    }
 
     edir = opendir(get_sldm_config_dir());
     if (!edir)
@@ -174,9 +182,9 @@ int nprompt(char *entry_name) {
     if (!lsp) 
         return res;
 
-    initscr();
+    win = initscr();
 
-    printw("Choose an entry (default: %d):\n", default_entry);
+    printw("Choose an entry (timeout: %ds):\n", prompt_timeout);
 
     while (entry_count < initial_entry_count && fgets(entry_table_buf[entry_count], ENTRY_BUF_SIZE, lsp) != 0) {
         printw("(%d) %s", entry_count + 1, entry_table_buf[entry_count]);
@@ -193,7 +201,7 @@ int nprompt(char *entry_name) {
     printw("\n(0) Exit\n");
     refresh();
 
-    res = nprompt_number();
+    res = nprompt_number(NULL);
     ncleanup();
     return res;
 }

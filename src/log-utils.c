@@ -24,7 +24,7 @@ void nerror(const char* err_format, ...) {
     char *err;
 
     va_start(args, err_format);
-    err = concat("\nerror: ", err_format);
+    err = concat("error: ", err_format);
     if (!err)
         return;
 
