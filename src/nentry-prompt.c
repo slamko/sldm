@@ -11,8 +11,8 @@
 #include "log-utils.h"
 #include "command-names.h"
 
-#define ENTRY_NUMBER_PROMPT "\rEnter an entry number (%s): "
-#define ENTRY_NUMBER_PROMPT_DEFAULT "\rEnter an entry number (default: %d): "
+#define ENTRY_NUMBER_PROMPT "\rProvide an entry name or number (%s): "
+#define ENTRY_NUMBER_PROMPT_DEFAULT "\rProvide an entry name or number (default: %d): "
 
 int entry_count = 0;
 char **entry_table_buf = NULL;
@@ -36,16 +36,15 @@ void ncleanup() {
     endwin();
 }
 
-void cleanstr2(char *str) {
-    for (int i = strlen(str) - 2; i < ENTRY_NAME_BUF_SIZE; i++) {
-        str[i] = '\0';
-    }
-}
-
 void cleanstr(char *str) {
     for (int i = strlen(str) - 1; i < ENTRY_NAME_BUF_SIZE; i++) {
         str[i] = '\0';
     }
+}
+
+void clean_nline() {
+    printw("\r\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
+    refresh();
 }
 
 int start_x(char *entry_name) {
@@ -162,8 +161,8 @@ int nprompt_number(char *hint) {
         match = sscanf(read_buf, "%d", &selected_entry);
 
         kill(timer_pid, SIGKILL);
-        if (match != 1 || selected_entry > entry_count || selected_entry < 0) {
-            int name_matches = 0, match_id;
+        if (match != 1) {
+            int name_matches = 0, match_id = 0;
             cleanstr(read_buf);
             for (int i = 0; i < entry_count; i++) {
                 if (strcmp(entry_table_buf[i], read_buf) == 0) 
@@ -175,11 +174,18 @@ int nprompt_number(char *hint) {
                 }
             }
 
-            if (name_matches == 1)
-                return start_x(entry_table_buf[match_id]);
+            clean_nline();
 
-            printw("\r\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
-            refresh();
+            switch (name_matches) {
+            case 0:
+                return nprompt_number("Invalid entry name");
+            case 1:
+                return start_x(entry_table_buf[match_id]);
+            default:
+                return nprompt_number("Disambiguous between multiple entry names");
+            }
+        }
+        if (selected_entry > entry_count || selected_entry < 0) {
             return nprompt_number("Invalid entry number");
         } else if (selected_entry > 0) {
             return start_x(entry_table_buf[selected_entry - 1]);

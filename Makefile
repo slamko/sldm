@@ -36,7 +36,7 @@ $(LOG): src/log-utils.c src/config-names.h
 $(NAMES): src/config-names.c
 	$(CC) $(CFLAGS) $(NAMES) src/config-names.c
 
-install: all
+install: sldm
 	mkdir -p $(BINP)
 	cp -f ./sldm $(BIN)
 	chmod 755 $(BIN)
