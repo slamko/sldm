@@ -147,7 +147,7 @@ int prompt(char *entry_name) {
 
     entry_table_buf = (char **)calloc(entry_count, sizeof(char *));
     for (int i = 0; i < entry_count; i++) {
-        entry_table_buf[i] = (char *)calloc(ENTRY_BUF_SIZE, sizeof(char));
+        entry_table_buf[i] = (char *)calloc(ENTRY_NAME_BUF_SIZE, sizeof(char));
     }
 
     if (!entry_table_buf)
@@ -162,9 +162,9 @@ int prompt(char *entry_name) {
 
     printf("Choose an entry (default: %d):\n", default_entry);
 
-    while (entry_count < initial_entry_count && fgets(entry_table_buf[entry_count], ENTRY_BUF_SIZE, lsp) != 0) {
+    while (entry_count < initial_entry_count && fgets(entry_table_buf[entry_count], ENTRY_NAME_BUF_SIZE, lsp) != 0) {
         printf("(%d) %s", entry_count + 1, entry_table_buf[entry_count]);
-        for (int i = strlen(entry_table_buf[entry_count]) - 1; i < ENTRY_BUF_SIZE; i++) {
+        for (int i = strlen(entry_table_buf[entry_count]) - 1; i < ENTRY_NAME_BUF_SIZE; i++) {
             entry_table_buf[entry_count][i] = '\0';
         }
         

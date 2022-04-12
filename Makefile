@@ -1,6 +1,6 @@
 CC=gcc
-LCFLAGS=-Wall -Werror -g
-CFLAGS=$(LCFLAGS) -c -o 
+LCFLAGS=-Wall -Werror
+CFLAGS=$(LCFLAGS) -g -c -o
 NAME=sldm
 SLDM=build/sldm.o
 MAIN=build/main.o

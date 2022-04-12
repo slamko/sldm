@@ -36,6 +36,18 @@ void ncleanup() {
     endwin();
 }
 
+void cleanstr2(char *str) {
+    for (int i = strlen(str) - 2; i < ENTRY_NAME_BUF_SIZE; i++) {
+        str[i] = '\0';
+    }
+}
+
+void cleanstr(char *str) {
+    for (int i = strlen(str) - 1; i < ENTRY_NAME_BUF_SIZE; i++) {
+        str[i] = '\0';
+    }
+}
+
 int start_x(char *entry_name) {
     char *entry_config_path;
     int pid;
@@ -109,13 +121,30 @@ int nprompt_number(char *hint) {
         char ch;
         int match;
         struct sigaction sa1 = { 0 };
-        char read_buf[16];
+        char read_buf[ENTRY_NAME_BUF_SIZE];
         sa1.sa_handler = &force_runx;
         sigaction(SIGUSR1, &sa1, NULL);
 
         ch = getch();
         for (int i = 0; i < sizeof(read_buf); i++) {
-            if (ch == '\n') {
+            if (ch == KEY_UP) {
+                kill(timer_pid, SIGKILL);
+
+                if (default_entry <= 1) 
+                    default_entry = entry_count;
+                else   
+                    default_entry--;
+                return nprompt_number(NULL);
+            } else if (ch == KEY_DOWN) {
+                kill(timer_pid, SIGKILL);
+
+                if (default_entry >= entry_count)
+                    default_entry = 1;
+                else   
+                    default_entry++;
+
+                return nprompt_number(NULL);
+            } else if (ch == '\n') {
                 read_buf[i] = ch;
                 break;
             } else if (ch != '\n' && ch != EOF) {
@@ -134,6 +163,21 @@ int nprompt_number(char *hint) {
 
         kill(timer_pid, SIGKILL);
         if (match != 1 || selected_entry > entry_count || selected_entry < 0) {
+            int name_matches = 0, match_id;
+            cleanstr(read_buf);
+            for (int i = 0; i < entry_count; i++) {
+                if (strcmp(entry_table_buf[i], read_buf) == 0) 
+                   return start_x(entry_table_buf[i]);
+
+                if (partialcmp(read_buf, entry_table_buf[i]) == 0) {
+                    name_matches++;
+                    match_id = i;
+                }
+            }
+
+            if (name_matches == 1)
+                return start_x(entry_table_buf[match_id]);
+
             printw("\r\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
             refresh();
             return nprompt_number("Invalid entry number");
@@ -169,7 +213,7 @@ int nprompt(char *entry_name) {
 
     entry_table_buf = (char **)calloc(entry_count, sizeof(char *));
     for (int i = 0; i < entry_count; i++) {
-        entry_table_buf[i] = (char *)calloc(ENTRY_BUF_SIZE, sizeof(char));
+        entry_table_buf[i] = (char *)calloc(ENTRY_NAME_BUF_SIZE, sizeof(char));
     }
 
     if (!entry_table_buf)
@@ -186,11 +230,9 @@ int nprompt(char *entry_name) {
 
     printw("Choose an entry (timeout: %ds):\n", prompt_timeout);
 
-    while (entry_count < initial_entry_count && fgets(entry_table_buf[entry_count], ENTRY_BUF_SIZE, lsp) != 0) {
+    while (entry_count < initial_entry_count && fgets(entry_table_buf[entry_count], ENTRY_NAME_BUF_SIZE, lsp) != 0) {
         printw("(%d) %s", entry_count + 1, entry_table_buf[entry_count]);
-        for (int i = strlen(entry_table_buf[entry_count]) - 1; i < ENTRY_BUF_SIZE; i++) {
-            entry_table_buf[entry_count][i] = '\0';
-        }
+        cleanstr(entry_table_buf[entry_count]);
         
         entry_count++;
     }

@@ -13,6 +13,27 @@
 extern int errno;
 char *add_entry_command;
 
+int partialcmp(const char *entry, const char *cmp) {
+    int elen;
+    int cmplen;
+
+    if (!entry || !cmp)
+        return 1;
+
+    elen = strlen(entry);
+    cmplen = strlen(cmp);
+
+    if (elen == cmplen) 
+        return strcmp(entry, cmp);
+    
+    for (int i = 0; i < (elen > cmplen ? cmplen : elen); i++)
+    {
+        if (entry[i] != cmp[i])
+            return 1; 
+    }
+    return 0;
+}
+
 int write_exec_command(FILE *fp) {
     char *exec_line;
     char *exec_command;
