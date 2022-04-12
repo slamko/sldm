@@ -13,7 +13,7 @@
 #ifdef PROMPT_TIMEOUT
 int prompt_timeout = PROMPT_TIMEOUT;
 #else
-int prompt_timeout = _PROMPT_TIMEOUT;
+int prompt_timeout = -1;
 #endif
 
 #ifdef DEFAULT_ENTRY
@@ -147,14 +147,10 @@ int parse_args(int argc, char **argv, struct args *args) {
 
 int check_prompt_config() {
     if (default_entry <= 0) {
-        error("Invalid default entry (%d)", default_entry);
+        error("\nInvalid default entry (%d)", default_entry);
         return 1;
     }
 
-    if (prompt_timeout < 0) {
-        error("Invalid prompt timeout (%d)", prompt_timeout);
-        return 1;
-    }
     return 0;
 }
 

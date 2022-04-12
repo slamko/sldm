@@ -6,7 +6,7 @@
 // Default config values
 #define XINITRC_L "~/.xinitrc"
 #define _DEFAULT_ENTRY 1
-#define _PROMPT_TIMEOUT 10
+#define _PROMPT_TIMEOUT -1
 
 extern int prompt_timeout;
 extern int default_entry;

@@ -14,14 +14,14 @@ OBJS=$(SLDM) $(MAIN) $(LOG) $(ENTRY_PROMPT) $(NAMES)
 MAIN_H=src/config-names.h src/log-utils.h
 SLDM_H=src/main.h $(MAIN_H)
 
-sldm: $(OBJS)
+sldm: $(OBJS) config.h
 	$(CC) $(LCFLAGS) $(OBJS) -o $(NAME)  -lncurses
 
 debug: LCFLAGS += -g
 debug: clean
 debug: sldm
 
-$(SLDM): src/sldm.c $(SLDM_H)
+$(SLDM): src/sldm.c $(SLDM_H) config.h
 	$(CC) $(CFLAGS) $(SLDM) src/sldm.c
 
 $(MAIN): src/main.c src/command-names.h  $(MAIN_H)

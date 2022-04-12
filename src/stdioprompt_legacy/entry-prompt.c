@@ -180,3 +180,23 @@ int prompt(char *entry_name) {
     entry_table_buf_dealloc();
     return res;
 }
+
+/*
+if (ch == KEY_UP) {
+                    kill(timer_pid, SIGKILL);
+
+                    if (default_entry <= 1) 
+                        default_entry = entry_count;
+                    else   
+                        default_entry--;
+                    return nprompt_number(NULL);
+                } else if (ch == KEY_DOWN) {
+                    kill(timer_pid, SIGKILL);
+
+                    if (default_entry >= entry_count)
+                        default_entry = 1;
+                    else   
+                        default_entry++;
+
+                    return nprompt_number(NULL);
+                } else */
