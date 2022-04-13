@@ -16,7 +16,7 @@ char *add_entry_command;
 int partialcmp(const char *entry, const char *cmp) {
     int elen;
     int cmplen;
-
+    
     if (!entry || !cmp)
         return 1;
 

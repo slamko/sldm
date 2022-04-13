@@ -37,10 +37,15 @@ void ncleanup() {
     endwin();
 }
 
-void cleanstr(char *str) {
-    for (int i = strlen(str) - 1; i < ENTRY_NAME_BUF_SIZE; i++) {
-        str[i] = '\0';
+int distillstr(char *str) {
+    if (!str)
+        return 1;
+
+    for (int i = 0; i < strlen(str); i++) {
+        if (str[i] == '\n' || str[i] == '\t') 
+            str[i] = '\0';
     }
+    return 0;
 }
 
 void clean_nline() {
@@ -159,7 +164,7 @@ int nprompt_number() {
 
             if (match != 1) {
                 int name_matches = 0, match_id = 0;
-                cleanstr(read_buf);
+                distillstr(read_buf);
                 for (int i = 0; i < entry_count; i++) {
                     if (strcmp(entry_table_buf[i], read_buf) == 0) 
                        return start_x(entry_table_buf[i]);
@@ -180,8 +185,7 @@ int nprompt_number() {
                     printw(ENTRY_PROMPT, "Disambiguous between multiple entry names");
                     break;
                 }
-            }
-            if (selected_entry > entry_count || selected_entry < 0) {
+            } else if (selected_entry > entry_count || selected_entry < 0) {
                 printw(ENTRY_PROMPT, "Invalid entry number");
             } else if (selected_entry > 0) {
                 return start_x(entry_table_buf[selected_entry - 1]);
@@ -236,7 +240,7 @@ int nprompt(char *entry_name) {
     while (entry_count < initial_entry_count && 
         fgets(entry_table_buf[entry_count], ENTRY_NAME_BUF_SIZE, lsp) != 0) {
         printw("(%d) %s", entry_count + 1, entry_table_buf[entry_count]);
-        cleanstr(entry_table_buf[entry_count]);
+        distillstr(entry_table_buf[entry_count]);
         
         entry_count++;
     }
