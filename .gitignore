@@ -3,3 +3,4 @@ sldm
 *.o
 *.out
 build/
+legacy/

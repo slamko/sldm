@@ -114,7 +114,7 @@ cleanup:
 
 int nprompt_number() {
     int selected_entry = default_entry;
-    int timer_pid;
+    int timer_pid = NO_TIMEOUT_CODE;
 
     timer_pid = fork_timer();
     timer_pid == NO_TIMEOUT_CODE ? 
@@ -132,8 +132,8 @@ int nprompt_number() {
     } else {
         char ch;
         int match;
-        struct sigaction sa1 = { 0 };
-        char read_buf[ENTRY_NAME_BUF_SIZE];
+        struct sigaction sa1 = {0};
+        char read_buf[ENTRY_NAME_BUF_SIZE] = {0};
         sa1.sa_handler = &force_runx;
         sigaction(SIGUSR1, &sa1, NULL);
 
@@ -152,8 +152,6 @@ int nprompt_number() {
             }
 
             if (read_buf[0] == '\n') {
-                printw("\n\n\nhello\n");
-                sleep(5);
                 kill(timer_pid, SIGKILL);
                 return start_x(entry_table_buf[default_entry - 1]);
             }
