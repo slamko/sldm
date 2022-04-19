@@ -3,17 +3,22 @@ LCFLAGS=-Wall -Werror -O2
 CFLAGS=$(LCFLAGS) -c -o
 LIBS=-lncurses
 NAME=sldm
-SLDM=build/sldm.o
-MAIN=build/main.o
-ENTRY_PROMPT=build/nentry-prompt.o
-LOG=build/log-utils.o
-NAMES=build/config-names.o
+BDIR=build
+
+SLDM=$(BDIR)/sldm.o
+MAIN=$(BDIR)/main.o
+ENTRY_PROMPT=$(BDIR)/nentry-prompt.o
+LOG=$(BDIR)/log-utils.o
+NAMES=$(BDIR)/config-names.o
+OBJS=$(SLDM) $(MAIN) $(LOG) $(ENTRY_PROMPT) $(NAMES)
+
 BINP=/usr/local/bin
 BIN=$(BINP)/sldm
-OBJS=$(SLDM) $(MAIN) $(LOG) $(ENTRY_PROMPT) $(NAMES)
 
 vpath %.h src
 vpath %.c src
+
+.PHONY: debug install clean uninstall
 
 MAIN_H=config-names.h log-utils.h
 SLDM_H=main.h $(MAIN_H)
@@ -23,7 +28,7 @@ $(NAME): $(OBJS) config.h
 
 debug: LCFLAGS=-Wall -Werror -Wextra -O0 -g
 debug: clean
-debug: sldm
+debug: $(NAME)
 
 $(SLDM): sldm.c $(SLDM_H) config.h
 	$(CC) $(CFLAGS) $@ $<
