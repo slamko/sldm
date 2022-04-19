@@ -41,7 +41,7 @@ int distillstr(char *str) {
     if (!str)
         return 1;
 
-    for (int i = 0; i < strlen(str); i++) {
+    for (size_t i = 0; i < strlen(str); i++) {
         if (str[i] == '\n' || str[i] == '\t') 
             str[i] = '\0';
     }
@@ -139,7 +139,7 @@ int nprompt_number() {
 
         while (1) {
             ch = getch();
-            for (int i = 0; i < sizeof(read_buf); i++) {
+            for (long unsigned int i = 0; i < sizeof(read_buf); i++) {
                 if (ch == '\n') {
                     read_buf[i] = ch;
                     break;

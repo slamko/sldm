@@ -39,10 +39,10 @@ int not_in_tty() {
         return cmp;
 
     if (fgets(tty_output, sizeof(tty_output), fp) != 0) {
-        char tty[9] = "";
+        char tty[9];
         char *tty_exp;
         strncpy(tty, tty_output, TTY_DEVICE_NAME_BYTES);
-        tty[9] = '\0';
+        tty[8] = '\0';
 
         tty_exp = TTY_DEVICE;
         cmp = strcmp(tty, tty_exp);

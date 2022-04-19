@@ -45,6 +45,7 @@ void error_invalid_entry(void) {
 
 void die_s(char *err, int status) {
     error(err);
+    exit(status);
 }
 
 void die(char *err) {
