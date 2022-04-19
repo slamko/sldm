@@ -183,6 +183,8 @@ int nprompt_number() {
                     printw(ENTRY_PROMPT, "Disambiguous between multiple entry names");
                     break;
                 }
+            } else if (selected_entry == 0) {
+                return 0;
             } else if (selected_entry > entry_count || selected_entry < 0) {
                 printw(ENTRY_PROMPT, "Invalid entry number");
             } else if (selected_entry > 0) {
