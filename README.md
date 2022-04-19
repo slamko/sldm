@@ -37,7 +37,10 @@ sldm add <entry> <exec>
 sldm remove <entry>
 sldm list [entry]
 sldm show <entry>
-sldm [-r] [entry] - Enter the menu screen
+sldm [options] [entry] - Enter the menu screen
+
+options:
+  -r    force run xorg if an entry name is the same as the commands above
 ```  
 - ### **Configuration**
 Although there isn't much to configure as it is pretty simple tool, there are few options in config.h inside cloned repo.

@@ -71,7 +71,9 @@ void print_usage() {
     printf("\tsldm remove <entry>\n");
     printf("\tsldm list [entry]\n");
     printf("\tsldm show <entry>\n");
-    printf("\tsldm [-r] [entry] - Enter the menu screen\n");
+    printf("\tsldm [options] [entry] - Enter the menu screen\n");
+    printf("\n options: \n");
+    printf("\t-r    force run xorg if an entry name in the same as the commands above\n");
 }
 
 int parse_args(int argc, char **argv, struct args *args) {
