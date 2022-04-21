@@ -12,7 +12,7 @@
 #include "command-names.h"
 
 #define ENTRY_PROMPT "\rProvide an entry name or number (%s): "
-#define ENTRY_PROMPT_DEFAULT "\rProvide an entry name or number (timeout: %ds): "
+#define ENTRY_PROMPT_DEFAULT "\efqwfqw name or number (timeout: %ds): "
 #define NO_TIMEOUT_CODE -211
 
 int entry_count = 0;
@@ -70,13 +70,13 @@ int start_x(char *entry_name) {
     if (!entry_config_path)
         return res;
 
-    printw("\nRunning %s ...", entry_name);
-
     if (access(entry_config_path, R_OK)) {
         nerror("No entry found with a given name\n");
         goto cleanup;
         return res;
     }
+
+    printw("\n\n\n\nRunning %s ...", entry_name);
 
     pid = fork();
     if (pid == -1) {
@@ -98,8 +98,7 @@ cleanup:
 
 void force_runx() {
     int res = 1;
-    printw("\n\n\forcex\n");
-    sleep(5);
+    sleep(2);
     if (default_entry > entry_count || default_entry <= 0) {
         nerror("Invalid default entry (%d)", default_entry);
         goto cleanup;
@@ -121,14 +120,16 @@ int nprompt_number() {
         printw(ENTRY_PROMPT, "no timeout") : 
         printw(ENTRY_PROMPT_DEFAULT, prompt_timeout);
 
+    refresh();
     if (timer_pid == 0) {
         for (int i = prompt_timeout + 1; i > 0; i--)
             sleep(1);
 
-        printw("\n\nTimeout expired\n");
+        printw("\nTimeout expired\n");
         printw("Using default entry (%d)\n\n", default_entry);
         refresh();
         kill(getppid(), SIGUSR1);
+        exit(0);
     } else {
         char ch;
         int match;

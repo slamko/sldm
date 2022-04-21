@@ -66,14 +66,15 @@ struct args {
 };
 
 void print_usage() {
-    printf(" Usage: \n");
-    printf("\tsldm add <entry> <exec>\n");
-    printf("\tsldm remove <entry>\n");
-    printf("\tsldm list [entry]\n");
-    printf("\tsldm show <entry>\n");
-    printf("\tsldm [options] [entry] - Enter the menu screen\n");
-    printf("\n options: \n");
-    printf("\t-r    force run xorg if an entry name in the same as the commands above\n");
+    printf(
+    " Usage: \n \
+    \tsldm add <entry> <exec>\n \
+    \tsldm remove <entry>\n \
+    \tsldm list [entry]\n \
+    \tsldm show <entry>\n \
+    \tsldm [options] [entry] - Enter the menu screen\n \
+    \n options: \n \
+    \t-r    force run xorg if an entry name in the same as the commands above\n");
 }
 
 int parse_args(int argc, char **argv, struct args *args) {
@@ -93,7 +94,7 @@ int parse_args(int argc, char **argv, struct args *args) {
     } else {
         int opt;
 
-        while((opt = getopt(argc, argv, "r:")) != -1) 
+        while((opt = getopt(argc, argv, "hr:")) != -1) 
         { 
             switch(opt) 
             { 
@@ -102,10 +103,12 @@ int parse_args(int argc, char **argv, struct args *args) {
                 args->entry_name = optarg;
                 return 0;
                 break; 
+            case 'h':
+                print_usage();
+                return 1;
             case '?':
                 print_usage();
                 return 1;
-                break;
             }
         } 
 
@@ -178,7 +181,7 @@ int check_xconfig() {
     }
 
     base_xconfig = expanded_config;
-    return 0;
+    return !base_xconfig;
 }
 
 void clean(struct args *arg) {
