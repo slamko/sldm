@@ -161,33 +161,36 @@ int check_prompt_config() {
 
 int check_xconfig() {
     wordexp_t exp_result;
-    char *expanded_config;
 
     #ifdef CONFIG_UNDEFINED
     base_xconfig = XINITRC_L;
     #endif
     wordexp(base_xconfig, &exp_result, 0);
-    expanded_config = strdup(exp_result.we_wordv[0]);
-    wordfree(&exp_result);
 
-    if (access(expanded_config, R_OK)){
+    if (access(exp_result.we_wordv[0], R_OK)){
         #ifndef CONFIG_UNDEFINED
         error("Unable to acces xinitrc at path %s", exp_result.we_wordv[0]);
+        wordfree(&exp_result);
         return 1;
         #else
         base_xconfig = NULL;
+        wordfree(&exp_result);
         return 0;
         #endif
     }
 
-    base_xconfig = expanded_config;
+    base_xconfig = strdup(exp_result.we_wordv[0]);
+    wordfree(&exp_result);
     return !base_xconfig;
 }
 
 void clean(struct args *arg) {
     cleanup_names();
-    if (base_xconfig)
+        sleep(5);
+    if (base_xconfig) {
+        sleep(3);
         free(base_xconfig);
+    }
         
     free(arg);
 }
