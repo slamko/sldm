@@ -12,10 +12,11 @@
 #include "command-names.h"
 
 #define ENTRY_PROMPT "\rProvide an entry name or number (%s): "
-#define ENTRY_PROMPT_DEFAULT "\efqwfqw name or number (timeout: %ds): "
-#define NO_TIMEOUT_CODE -211
+#define ENTRY_PROMPT_DEFAULT "\rProvide an entry name or number (timeout: %ds): "
+#define INITIMER_PID -1
 
 int entry_count = 0;
+int timer_pid = INITIMER_PID;
 char **entry_table_buf = NULL;
 WINDOW *win;
 
@@ -37,6 +38,13 @@ void ncleanup() {
     endwin();
 }
 
+void killtimer() {
+    if (timer_pid > 0) {
+        kill(timer_pid, SIGKILL);
+        timer_pid = INITIMER_PID;
+    }
+}
+
 int distillstr(char *str) {
     if (!str)
         return 1;
@@ -53,18 +61,12 @@ void clean_nline() {
     refresh();
 }
 
-int fork_timer() {
-    if (prompt_timeout > 0)
-        return fork();
-    
-    return NO_TIMEOUT_CODE;
-}
-
 int start_x(char *entry_name) {
     char *entry_config_path;
     int pid;
     int res = 1;
 
+    killtimer();
     entry_config_path = sldm_config_append(entry_name);
 
     if (!entry_config_path)
@@ -98,7 +100,8 @@ cleanup:
 
 void force_runx() {
     int res = 1;
-    sleep(2);
+    sleep(1);
+
     if (default_entry > entry_count || default_entry <= 0) {
         nerror("Invalid default entry (%d)", default_entry);
         goto cleanup;
@@ -113,14 +116,16 @@ cleanup:
 
 int nprompt_number() {
     int selected_entry = default_entry;
-    int timer_pid = NO_TIMEOUT_CODE;
 
-    timer_pid = fork_timer();
-    timer_pid == NO_TIMEOUT_CODE ? 
-        printw(ENTRY_PROMPT, "no timeout") : 
+    if (prompt_timeout > 0) {
         printw(ENTRY_PROMPT_DEFAULT, prompt_timeout);
+        refresh();
+        timer_pid = fork();
+    } else { 
+        printw(ENTRY_PROMPT, "no timeout");
+        refresh();
+    }
 
-    refresh();
     if (timer_pid == 0) {
         for (int i = prompt_timeout + 1; i > 0; i--)
             sleep(1);
@@ -153,20 +158,19 @@ int nprompt_number() {
             }
 
             if (read_buf[0] == '\n') {
-                kill(timer_pid, SIGKILL);
                 return start_x(entry_table_buf[default_entry - 1]);
             }
 
             match = sscanf(read_buf, "%d", &selected_entry);
             clean_nline();
-            kill(timer_pid, SIGKILL);
 
             if (match != 1) {
                 int name_matches = 0, match_id = 0;
                 distillstr(read_buf);
                 for (int i = 0; i < entry_count; i++) {
-                    if (strcmp(entry_table_buf[i], read_buf) == 0) 
+                    if (strcmp(entry_table_buf[i], read_buf) == 0) {
                        return start_x(entry_table_buf[i]);
+                    }
 
                     if (partialcmp(read_buf, entry_table_buf[i]) == 0) {
                         name_matches++;
@@ -179,6 +183,7 @@ int nprompt_number() {
                     printw(ENTRY_PROMPT, "Invalid entry name");
                     break;
                 case 1:
+                    
                     return start_x(entry_table_buf[match_id]);
                 default:
                     printw(ENTRY_PROMPT, "Disambiguous between multiple entry names");
@@ -253,6 +258,7 @@ int nprompt(char *entry_name) {
     refresh();
 
     res = nprompt_number();
+    killtimer();
     ncleanup();
     return res;
 }

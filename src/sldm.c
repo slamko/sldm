@@ -186,9 +186,7 @@ int check_xconfig() {
 
 void clean(struct args *arg) {
     cleanup_names();
-        sleep(5);
     if (base_xconfig) {
-        sleep(3);
         free(base_xconfig);
     }
         
