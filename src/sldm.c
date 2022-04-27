@@ -66,14 +66,14 @@ struct args {
 
 void print_usage() {
     printf(
-    " Usage: \n \
+    "\n Usage: \n \
     \tsldm add <entry> <exec>\n \
     \tsldm remove <entry>\n \
     \tsldm list [entry]\n \
     \tsldm show <entry>\n \
     \tsldm [options] [entry] - Enter the menu screen\n \
     \n options: \n \
-    \t-r    force run xorg if an entry name in the same as the commands above\n");
+    \t-r    force run xorg if an entry name in the same as the commands above\n\n");
 }
 
 int parse_args(int argc, char **argv, struct args *args) {

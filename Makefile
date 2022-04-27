@@ -1,7 +1,8 @@
 CC=gcc
 WFLAGS=-Wall -Werror -Wextra
 LCFLAGS=$(WFLAGS) -O2
-CFLAGS=$(LCFLAGS) -c -o
+DEBUGF=-O0 -g
+CFLAGS=$(LCFLAGS) -c -Isrc/include -o 
 LIBS=-lncurses
 TARGET=sldm
 BDIR=build
@@ -24,7 +25,7 @@ all: $(TARGET)
 $(TARGET): $(BDIR) $(OBJS) config.h
 	$(CC) $(LCFLAGS) $(OBJS) -o $(TARGET) $(LIBS)
 
-debug: LCFLAGS=$(WFLAGS) -O0 -g
+debug: LCFLAGS=$(WFLAGS) $(DEBUGF)
 debug: clean
 debug: $(TARGET)
 
