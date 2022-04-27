@@ -29,7 +29,7 @@ char *base_xconfig = NULL;
 #define CONFIG_UNDEFINED 
 #endif
 
-int not_in_tty() {
+int not_in_tty(void) {
     FILE* fp = NULL;
     int cmp = -1;
     char tty_output[128];
@@ -40,11 +40,10 @@ int not_in_tty() {
 
     if (fgets(tty_output, sizeof(tty_output), fp) != 0) {
         char tty[9];
-        char *tty_exp;
+        char tty_exp[] = TTY_DEVICE;
         strncpy(tty, tty_output, TTY_DEVICE_NAME_BYTES);
         tty[8] = '\0';
 
-        tty_exp = TTY_DEVICE;
         cmp = strcmp(tty, tty_exp);
     }
 
@@ -78,7 +77,7 @@ void print_usage() {
 }
 
 int parse_args(int argc, char **argv, struct args *args) {
-    char *target;
+    char *target = NULL;
     args->target = PROMPT;
     args->entry_name = NULL;
 
@@ -153,10 +152,10 @@ int parse_args(int argc, char **argv, struct args *args) {
 int check_prompt_config() {
     if (default_entry <= 0) {
         error("\nInvalid default entry (%d)", default_entry);
-        return 1;
+        return EXIT_FAILURE;
     }
 
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 int check_xconfig() {
@@ -171,11 +170,11 @@ int check_xconfig() {
         #ifndef CONFIG_UNDEFINED
         error("Unable to acces xinitrc at path %s", exp_result.we_wordv[0]);
         wordfree(&exp_result);
-        return 1;
+        return EXIT_FAILURE;
         #else
         base_xconfig = NULL;
         wordfree(&exp_result);
-        return 0;
+        return EXIT_SUCCESS;
         #endif
     }
 
@@ -194,10 +193,10 @@ void clean(struct args *arg) {
 }
 
 int main(int argc, char** argv) {
-    struct args *args;
-    int res = 1;
+    struct args *args = NULL;
+    int res = EXIT_FAILURE;
 
-    args = (struct args *)malloc(sizeof(struct args));
+    args = malloc(sizeof(*args));
     if (parse_args(argc, argv, args))
         goto cleanup;
 

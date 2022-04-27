@@ -9,7 +9,7 @@ void error(const char* err_format, ...) {
     char *err;
 
     va_start(args, err_format);
-    err = concat("error: ", err_format);
+    err = sappend("error: ", err_format);
     if (!err)
         return;
 
@@ -24,7 +24,7 @@ void nerror(const char* err_format, ...) {
     char *err;
 
     va_start(args, err_format);
-    err = concat("error: ", err_format);
+    err = sappend("error: ", err_format);
     if (!err)
         return;
 
@@ -43,11 +43,16 @@ void error_invalid_entry(void) {
     error("Invalid entry name");
 }
 
-void die_s(char *err, int status) {
+void die_s(const char *err, int status) {
     error(err);
     exit(status);
 }
 
-void die(char *err) {
+void die(const char *err) {
     die_s(err, 1);
+}
+
+void fatal(void) {
+    perror("fatal");
+    exit(1);
 }

@@ -17,36 +17,36 @@ char *get_home(void) {
     return home;
 }
 
-char *concat(const char *base, const char *appends) {
+char *sappend(const char *base, const char *appends) {
     const size_t len1 = strlen(base);
     const size_t len2 = strlen(appends);
-    char *result = calloc(len1 + len2 + 1, sizeof(char));
+    char *result = calloc(len1 + len2 + 1, sizeof(*result));
 
     if (!result) 
-        die("Out of memory");
-    
-    strcpy(result, base);
-    strcpy(result + len1, appends);
+        fatal();
+
+    strncpy(result, base, len1 + 1);
+    strncat(result + len1, appends, len2 + 1);
     return result;
 }
 
-char *slash_concat(const char *base, const char *appends) {
+char *slash_append(const char *base, const char *appends) {
     const size_t len1 = strlen(base);
     const size_t len2 = strlen(appends);
-    char *result = malloc(len1 + len2 + 2);
+    char *result = calloc(len1 + len2 + 2, sizeof(*result));
 
     if (!result) 
-        die("Out of memory");
+        fatal();
     
-    strcpy(result, base);
+    strncpy(result, base, len1 + 1);
     result[len1] = '/';
-    memcpy(result + len1 + 1, appends, len2 + 1);
+    strncat(result + len1 + 1, appends, len2 + 1);
     return result;
 }
 
 char *home_path_append(const char *appends) {
     const char *home = get_home();
-    return concat(home, appends);
+    return sappend(home, appends);
 }
 
 char *xinitrc = NULL;
@@ -71,8 +71,8 @@ char *get_sldm_config_dir(void) {
     return sldm_config_dir;
 }
 
-char *sldm_config_append(char *appends) {
-    return concat(get_sldm_config_dir(), appends);
+char *sldm_config_append(const char *appends) {
+    return sappend(get_sldm_config_dir(), appends);
 }
 
 char *get_xconfig(void) {

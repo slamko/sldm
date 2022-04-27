@@ -12,11 +12,11 @@ extern int prompt_timeout;
 extern int default_entry;
 extern char *base_xconfig;
 
-char *concat(const char *base, const char *appends);
+char *sappend(const char *base, const char *appends);
 
 char *home_path_append(const char *append);
 
-char *sldm_config_append(char *appends);
+char *sldm_config_append(const char *appends);
 
 char *get_home(void);
 

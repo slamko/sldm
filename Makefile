@@ -1,12 +1,15 @@
 CC=gcc
-LCFLAGS=-Wall -Werror -O2
+WFLAGS=-Wall -Werror -Wextra
+LCFLAGS=$(WFLAGS) -O2
 CFLAGS=$(LCFLAGS) -c -o
 LIBS=-lncurses
 TARGET=sldm
 BDIR=build
 SRCD=src
-OBJS=$(addprefix $(BDIR)/, sldm.o main.o nentry-prompt.o config-names.o log-utils.o)
-HEADERS=$(wildcard $(SRCD)/*.h)
+
+SRC:=$(wildcard $(SRCD)/*.c)
+OBJS:=$(SRC:$(SRCD)%.c=$(BDIR)%.o)
+HEADERS:=$(wildcard $(SRCD)/*.h)
 
 BINP=/usr/local/bin
 BIN=$(BINP)/sldm
@@ -18,24 +21,27 @@ vpath %.c $(SRCD)
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS) config.h
+$(TARGET): $(BDIR) $(OBJS) config.h
 	$(CC) $(LCFLAGS) $(OBJS) -o $(TARGET) $(LIBS)
 
-debug: LCFLAGS=-Wall -Werror -Wextra -O0 -g
+debug: LCFLAGS=$(WFLAGS) -O0 -g
 debug: clean
 debug: $(TARGET)
 
-$(BDIR)/%.o: $(SRCD)/%.c $(HEADERS)
+$(BDIR):
+	mkdir -p $(BDIR)
+
+$(OBJS): build/%.o : $(SRCD)/%.c $(HEADERS)
 	$(CC) $(CFLAGS) $@ $<
 
 install: $(TARGET)
 	mkdir -p $(BINP)
-	cp -f ./sldm $(BIN)
+	cp -f ./$(TARGET) $(BIN)
 	chmod 755 $(BIN)
 
 clean: 
-	rm -rf $(OBJS) $(TARGET)
+	$(RM) -r $(OBJS) $(TARGET)
 
 uninstall: 
-	rm -f $(BIN)
+	$(RM) $(BIN)
 

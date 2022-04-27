@@ -11,7 +11,7 @@
 #include "command-names.h"
 
 extern int errno;
-char *add_entry_command;
+char *add_entry_command = NULL;
 
 int partialcmp(const char *entry, const char *cmp) {
     int elen;
@@ -20,11 +20,11 @@ int partialcmp(const char *entry, const char *cmp) {
     if (!entry || !cmp)
         return 1;
 
-    elen = strlen(entry);
-    cmplen = strlen(cmp);
+    elen = strnlen(entry, ENTRY_NAME_BUF_SIZE);
+    cmplen = strnlen(cmp, ENTRY_NAME_BUF_SIZE);
 
     if (elen == cmplen) 
-        return strcmp(entry, cmp);
+        return strncmp(entry, cmp, ENTRY_NAME_BUF_SIZE);
     
     for (int i = 0; i < (elen > cmplen ? cmplen : elen); i++)
     {
@@ -35,10 +35,10 @@ int partialcmp(const char *entry, const char *cmp) {
 }
 
 int write_exec_command(FILE *fp) {
-    char *exec_line;
-    char *exec_command;
+    char *exec_line = NULL;
+    char *exec_command = NULL;
 
-    exec_line = (char *)calloc(EXEC_C_LENGTH + 1 + strlen(add_entry_command) + 1, sizeof(char));
+    exec_line = calloc(EXEC_C_LENGTH + 1 + strlen(add_entry_command) + 1, sizeof(*exec_line));
 
     if (!exec_line) {
         fclose(fp);
@@ -61,8 +61,8 @@ int write_exec_command(FILE *fp) {
 
 int copy_base_config(char *new_entry_path) {
     char xconfig_ch;
-    FILE *xinitrc;
-    FILE *new_entry;
+    FILE *xinitrc = NULL;
+    FILE *new_entry = NULL;
     int res = 1;
 
     if (!get_xconfig() || access(get_xconfig(), R_OK)) {
@@ -92,12 +92,12 @@ int copy_base_config(char *new_entry_path) {
     return res;
 }
 
-int entry_invalid(char *new_entry) {
+int entry_invalid(const char *new_entry) {
     return !new_entry || new_entry[0] == '\0';
 }
 
-int add_entry(char *new_entry) {
-    char *new_entry_path;
+int add_entry(const char *new_entry) {
+    char *new_entry_path = NULL;
     int res = 1;
 
     if (entry_invalid(new_entry)) { 
@@ -123,8 +123,8 @@ int add_entry(char *new_entry) {
     return res;
 }
 
-int remove_entry(char *entry_name) {
-    char *remove_entry_path;
+int remove_entry(const char *entry_name) {
+    char *remove_entry_path = NULL;
     int res = 1;
     
     if (entry_invalid(entry_name)) {
@@ -146,8 +146,8 @@ int remove_entry(char *entry_name) {
     return res;
 }
 
-int list_entries(char *entry_name) {
-    char *list_entry_path;
+int list_entries(const char *entry_name) {
+    char *list_entry_path = NULL;
     int res = 1;
     int exec = -1;
 
@@ -178,8 +178,8 @@ cleanup:
     return res;
 }
 
-int show_entry(char *entry_name) {
-    char *show_entry_path;
+int show_entry(const char *entry_name) {
+    char *show_entry_path = NULL;
     int res;
     int exec;
 

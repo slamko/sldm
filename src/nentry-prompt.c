@@ -17,7 +17,7 @@
 
 int entry_count = 0;
 int timer_pid = INITIMER_PID;
-char **entry_table_buf = NULL;
+char **entry_table_buf;
 WINDOW *win;
 
 void entry_table_buf_dealloc() {
@@ -62,7 +62,7 @@ void clean_nline() {
 }
 
 int start_x(char *entry_name) {
-    char *entry_config_path;
+    char *entry_config_path = NULL;
     int pid;
     int res = 1;
 
@@ -145,7 +145,7 @@ int nprompt_number() {
 
         while (1) {
             ch = getch();
-            for (long unsigned int i = 0; i < sizeof(read_buf); i++) {
+            for (size_t i = 0; i < sizeof(read_buf); i++) {
                 if (ch == '\n') {
                     read_buf[i] = ch;
                     break;
@@ -203,10 +203,10 @@ int nprompt_number() {
 
 int nprompt(char *entry_name) {
     int res = 1;
-    FILE *lsp;
-    DIR *edir;
-    struct dirent *entry; 
-    char *ls_command; 
+    FILE *lsp = NULL;
+    DIR *edir = NULL;
+    struct dirent *entry = NULL;
+    char *ls_command = NULL;
     int initial_entry_count;
 
     if (!entry_invalid(entry_name)) {
@@ -224,16 +224,21 @@ int nprompt(char *entry_name) {
     initial_entry_count = entry_count;
     closedir(edir);
 
-    entry_table_buf = (char **)calloc(entry_count, sizeof(char *));
-    for (int i = 0; i < entry_count; i++) {
-        entry_table_buf[i] = (char *)calloc(ENTRY_NAME_BUF_SIZE, sizeof(char));
-    }
-
+    entry_table_buf = (char **)calloc(entry_count, sizeof(*entry_table_buf));
     if (!entry_table_buf)
         return res;
 
+    for (int i = 0; i < entry_count; i++) {
+        entry_table_buf[i] = (char *)calloc(ENTRY_NAME_BUF_SIZE, sizeof(**entry_table_buf));
+        
+        if (!entry_table_buf[i]) {
+            free(entry_table_buf);
+            return res;
+        }
+    }
+
     entry_count = 0;
-    ls_command = concat(ENTRY_SORT, get_sldm_config_dir());
+    ls_command = sappend(ENTRY_SORT, get_sldm_config_dir());
 
     lsp = popen(ls_command, "r");
     if (!lsp) 
