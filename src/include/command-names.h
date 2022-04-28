@@ -1,3 +1,6 @@
+#ifndef COMMAND_NAMES
+#define COMMAND_NAMES
+
 #define ADD_ENTRY_ARG "add-entry"
 #define REMOVE_ENTRY_ARG "remove-entry"
 #define LIST_ENTRIES_ARG "list-entries"
@@ -15,6 +18,4 @@
 #define EXEC_C_LENGTH (sizeof(EXEC_C) - 1)
 #define ENTRY_NAME_BUF_SIZE 256
 
-int entry_invalid(const char *new_entry);
-
-int partialcmp(const char *command, const char *cmp);
+#endif

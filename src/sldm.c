@@ -7,6 +7,7 @@
 #include "config-names.h"
 #include "log-utils.h"
 #include "main.h"
+#include "utils.h"
 
 #include "config.h"
 

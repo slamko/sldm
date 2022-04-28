@@ -1,3 +1,6 @@
+#ifndef CONFIG_NAMES
+#define CONFIG_NAMES
+
 #define XINITRC_ETC "/etc/X11/xinit/xinitrc"
 #define XINITRC_ETC_D "/etc/X11/xinit/xinitrc.d"
 #define SLDM_CONFIG "/.config/sldm/"
@@ -25,3 +28,5 @@ char *get_xconfig(void);
 char *get_sldm_config_dir(void);
 
 void cleanup_names(void);
+
+#endif

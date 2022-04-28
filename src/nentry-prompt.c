@@ -9,7 +9,7 @@
 #include <signal.h>
 #include "config-names.h"
 #include "log-utils.h"
-#include "command-names.h"
+#include "utils.h"
 
 #define ENTRY_PROMPT "\rProvide an entry name or number (%s): "
 #define ENTRY_PROMPT_DEFAULT "\rProvide an entry name or number (timeout: %ds): "

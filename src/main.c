@@ -8,31 +8,10 @@
 #include <sys/wait.h>
 #include "config-names.h"
 #include "log-utils.h"
-#include "command-names.h"
+#include "utils.h"
 
 extern int errno;
 char *add_entry_command = NULL;
-
-int partialcmp(const char *entry, const char *cmp) {
-    int elen;
-    int cmplen;
-    
-    if (!entry || !cmp)
-        return 1;
-
-    elen = strnlen(entry, ENTRY_NAME_BUF_SIZE);
-    cmplen = strnlen(cmp, ENTRY_NAME_BUF_SIZE);
-
-    if (elen == cmplen) 
-        return strncmp(entry, cmp, ENTRY_NAME_BUF_SIZE);
-    
-    for (int i = 0; i < (elen > cmplen ? cmplen : elen); i++)
-    {
-        if (entry[i] != cmp[i])
-            return 1; 
-    }
-    return 0;
-}
 
 int write_exec_command(FILE *fp) {
     char *exec_line = NULL;
@@ -90,10 +69,6 @@ int copy_base_config(char *new_entry_path) {
     fclose(new_entry);
 
     return res;
-}
-
-int entry_invalid(const char *new_entry) {
-    return !new_entry || new_entry[0] == '\0';
 }
 
 int add_entry(const char *new_entry) {
