@@ -20,7 +20,7 @@ int timer_pid = INITIMER_PID;
 char **entry_table_buf;
 WINDOW *win;
 
-void entry_table_buf_dealloc() {
+void entry_table_buf_dealloc(void) {
     if (!entry_table_buf)
         return;
 
@@ -32,13 +32,13 @@ void entry_table_buf_dealloc() {
     entry_table_buf = NULL;
 }
 
-void ncleanup() {
+void ncleanup(void) {
     entry_table_buf_dealloc();
     refresh();
     endwin();
 }
 
-void killtimer() {
+void killtimer(void) {
     if (timer_pid > 0) {
         kill(timer_pid, SIGKILL);
         timer_pid = INITIMER_PID;

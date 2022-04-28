@@ -149,35 +149,42 @@ int remove_entry(const char *entry_name) {
     return res;
 }
 
+int readdir_entries(const char *entry_name) {
+    DIR *edir;
+    struct dirent *edirent = NULL;
+    size_t entrid;
+
+    edir = opendir(get_sldm_config_dir());
+    if (!edir)
+        return 1;
+
+    for (entrid = 0; (edirent = readdir(edir)); ++entrid) {
+        if (edirent->d_type == DT_REG) {
+            if (entry_name) {
+                if (strcmp(edirent->d_name, entry_name)) {
+                    printf("(%lu) %s\n", entrid, entry_name);
+                    break;
+                }
+            } else {
+                printf("(%lu) %s\n", entrid, edirent->d_name);
+            }
+        }
+    }
+    
+    return 0;
+}
+
 int list_entries(const char *entry_name) {
-    char *list_entry_path = NULL;
-    int res = 1;
-    int exec = -1;
+    int res;
 
     if (entry_invalid(entry_name)) {
-        exec = fork();
-        if (exec == -1)
-            return res;
-
-        if (exec == 0) 
-            execl(LS_BIN, LS_BIN, get_sldm_config_dir(), NULL);
-
-        wait(&res);
-        return res;
+        entry_name = NULL;
     }
 
-    list_entry_path = sldm_config_append(entry_name);
-    exec = fork();
-    if (exec == -1)
-        goto cleanup;
+    res = readdir_entries(entry_name);
+    if (res)
+        fatal();
 
-    if (exec == 0)
-        execl(LS_BIN, LS_BIN, list_entry_path, NULL);
-
-    wait(&res);
-
-cleanup:
-    free(list_entry_path);
     return res;
 }
 
@@ -195,9 +202,9 @@ int show_entry(const char *entry_name) {
     entryf = fopen(show_entry_path, "r");
 
     if (entryf) {
-        for(char cch = fgetc(entryf); cch != EOF; cch = fgetc(entryf)) {
+        for(char cch = fgetc(entryf); cch != EOF; cch = fgetc(entryf))
             fputc(cch, stdout);
-        }
+        
         fputc('\n', stdout);
     } else if (errno == ENOENT) {
         err_noentry_found(entry_name);
