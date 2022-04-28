@@ -13,3 +13,6 @@ void die_s(const char *, int);
 void die(const char *);
 
 void fatal(void);
+
+#define ERR_PREF "error"
+#define FATAL_PREF "fatal"

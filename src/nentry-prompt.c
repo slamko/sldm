@@ -15,6 +15,8 @@
 #define ENTRY_PROMPT_DEFAULT "\rProvide an entry name or number (timeout: %ds): "
 #define INITIMER_PID -1
 
+#define NN(S) "\n"S"\n"
+
 int entry_count = 0;
 int timer_pid = INITIMER_PID;
 char **entry_table_buf;
@@ -34,6 +36,7 @@ void entry_table_buf_dealloc(void) {
 
 void ncleanup(void) {
     entry_table_buf_dealloc();
+    wclear(win);
     refresh();
     endwin();
 }
@@ -57,7 +60,7 @@ int distillstr(char *str) {
 }
 
 void clean_nline() {
-    printw("\r\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t");
+    wdeleteln(win);
     refresh();
 }
 
@@ -130,7 +133,7 @@ int nprompt_number() {
         for (int i = prompt_timeout + 1; i > 0; i--)
             sleep(1);
 
-        printw("\nTimeout expired\n");
+        printw(NN("Timeout expired"));
         printw("Using default entry (%d)\n\n", default_entry);
         refresh();
         kill(getppid(), SIGUSR1);
@@ -245,6 +248,7 @@ int nprompt(char *entry_name) {
         return res;
 
     win = initscr();
+    win->_scroll = true;
 
     printw("Choose an entry (default: %d):\n", default_entry);
 
@@ -259,7 +263,7 @@ int nprompt(char *entry_name) {
     pclose(lsp); 
     free(ls_command);
 
-    printw("\n(0) Exit\n");
+    printw(NN("(0) Exit"));
     refresh();
 
     res = nprompt_number();

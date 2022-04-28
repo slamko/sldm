@@ -117,7 +117,7 @@ int remove_entry(const char *entry_name) {
     } else if(errno == ENOENT) {
         err_noentry_found(entry_name);
     } else { 
-        fatal();
+        perror(ERR_PREF);
     }
 
     free(remove_entry_path);
@@ -163,7 +163,7 @@ int list_entries(const char *entry_name) {
 
     res = readdir_entries(entry_name);
     if (res)
-        fatal();
+        perror(ERR_PREF);
 
     return res;
 }
@@ -189,7 +189,7 @@ int show_entry(const char *entry_name) {
     } else if (errno == ENOENT) {
         err_noentry_found(entry_name);
     } else {
-        fatal();
+        perror(ERR_PREF);
     }
 
     free(show_entry_path);

@@ -8,6 +8,7 @@
 
 #define TTY_DEVICE "/dev/tty"
 #define TTY_DEVICE_NAME_BYTES (sizeof(TTY_DEVICE) - 1)
+#define TTY_MIN_NAME_LEN sizeof("/dev/pts/")
 #define TTY_BIN "/bin/tty"
 #define LS_BIN "/bin/ls"
 #define CAT_BIN "/bin/cat"

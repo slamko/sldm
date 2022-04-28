@@ -3,13 +3,14 @@
 #include <stdlib.h>
 #include <ncurses.h>
 #include "config-names.h"
+#include "log-utils.h"
 
 void error(const char* err_format, ...) {
     va_list args;
     char *err;
 
     va_start(args, err_format);
-    err = sappend("error: ", err_format);
+    err = sappend(ERR_PREF ": ", err_format);
     if (!err)
         return;
 
@@ -24,7 +25,7 @@ void nerror(const char* err_format, ...) {
     char *err;
 
     va_start(args, err_format);
-    err = sappend("error: ", err_format);
+    err = sappend(ERR_PREF ": ", err_format);
     if (!err)
         return;
 
@@ -57,6 +58,6 @@ void die(const char *err) {
 }
 
 void fatal(void) {
-    perror("fatal");
+    perror(FATAL_PREF);
     exit(1);
 }

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <wordexp.h>
 #include <stdbool.h>
+#include <errno.h>
 #include "config-names.h"
 #include "log-utils.h"
 #include "main.h"
@@ -31,24 +32,15 @@ char *base_xconfig = NULL;
 #endif
 
 int not_in_tty(void) {
-    FILE* fp = NULL;
-    int cmp = -1;
-    char tty_output[128];
+    char tty_output[TTY_MIN_NAME_LEN];
+    int cmp = 1;
 
-    fp = popen(TTY_BIN, "r");
-    if (!fp) 
-        return cmp;
-
-    if (fgets(tty_output, sizeof(tty_output), fp) != 0) {
-        char tty[9];
-        char tty_exp[] = TTY_DEVICE;
-        strncpy(tty, tty_output, TTY_DEVICE_NAME_BYTES);
-        tty[8] = '\0';
-
-        cmp = strcmp(tty, tty_exp);
+    if (ttyname_r(STDIN_FILENO, tty_output, sizeof(tty_output)) == 0) {
+        cmp = strncmp(tty_output, TTY_DEVICE, TTY_DEVICE_NAME_BYTES);
+    } else if (errno != ENODEV) {
+        perror(ERR_PREF);
     }
 
-    pclose(fp);
     return cmp;
 } 
 
@@ -67,14 +59,14 @@ struct args {
 
 void print_usage() {
     printf(
-    "\n Usage: \n \
-    \tsldm add <entry> <exec>\n \
-    \tsldm remove <entry>\n \
-    \tsldm list [entry]\n \
-    \tsldm show <entry>\n \
-    \tsldm [options] [entry] - Enter the menu screen\n \
-    \n options: \n \
-    \t-r    force run xorg if an entry name in the same as the commands above\n\n");
+    "\n Usage: \n"
+    "\tsldm add <entry> <exec>\n"
+    "\tsldm remove <entry>\n"
+    "\tsldm list [entry]\n"
+    "\tsldm show <entry>\n"
+    "\tsldm [options] [entry] - Enter the menu screen\n"
+    "\n options: \n"
+    "\t-r    force run xorg if an entry name in the same as the commands above\n\n");
 }
 
 int parse_args(int argc, char **argv, struct args *args) {
