@@ -8,7 +8,7 @@
 #include "log-utils.h"
 #include "main.h"
 
-#include "../config.h"
+#include "config.h"
 
 #ifdef PROMPT_TIMEOUT
 int prompt_timeout = PROMPT_TIMEOUT;

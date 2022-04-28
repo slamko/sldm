@@ -43,6 +43,10 @@ void error_invalid_entry(void) {
     error("Invalid entry name");
 }
 
+void err_noentry_found(const char *entryname) {
+    error("No entry found with name: '%s'", entryname);
+}
+
 void die_s(const char *err, int status) {
     error(err);
     exit(status);

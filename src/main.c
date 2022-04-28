@@ -137,11 +137,14 @@ int remove_entry(const char *entry_name) {
         return res;
 
     res = remove(remove_entry_path);
-    if (!res) 
+    if (!res) {
         printf("Entry with name '%s' was removed\n", entry_name);
-    else if(errno == 2)
-        error("No entry found with name: '%s'", entry_name);
-        
+    } else if(errno == ENOENT) {
+        err_noentry_found(entry_name);
+    } else { 
+        fatal();
+    }
+
     free(remove_entry_path);
     return res;
 }
@@ -179,9 +182,9 @@ cleanup:
 }
 
 int show_entry(const char *entry_name) {
+    FILE *entryf = NULL;
     char *show_entry_path = NULL;
     int res;
-    int exec;
 
     if (entry_invalid(entry_name)) {
         error_invalid_entry();
@@ -189,22 +192,19 @@ int show_entry(const char *entry_name) {
     }
 
     show_entry_path = sldm_config_append(entry_name);
-    if ((res = access(show_entry_path, R_OK))) {
-        error("Unable to access file at path: %s", show_entry_path);
-        goto cleanup;
+    entryf = fopen(show_entry_path, "r");
+
+    if (entryf) {
+        for(char cch = fgetc(entryf); cch != EOF; cch = fgetc(entryf)) {
+            fputc(cch, stdout);
+        }
+        fputc('\n', stdout);
+    } else if (errno == ENOENT) {
+        err_noentry_found(entry_name);
+    } else {
+        fatal();
     }
 
-    exec = fork();
-    if (exec == -1)
-        goto cleanup;
-
-    if (exec == 0)
-        execl(CAT_BIN, CAT_BIN, show_entry_path, NULL);
-
-    wait(&res);
-    printf("\n");
-
-cleanup:
     free(show_entry_path);
     return res;
 }
