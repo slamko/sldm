@@ -13,7 +13,7 @@
 extern int errno;
 char *add_entry_command = NULL;
 
-int write_exec_command(FILE *fp) {
+static int write_exec_command(FILE *fp) {
     char *exec_line = NULL;
     char *exec_command = NULL;
 
@@ -38,7 +38,7 @@ int write_exec_command(FILE *fp) {
     return 0;
 }
 
-int copy_base_config(char *new_entry_path) {
+static int copy_base_config(char *new_entry_path) {
     char xconfig_ch;
     FILE *xinitrc = NULL;
     FILE *new_entry = NULL;
@@ -125,16 +125,19 @@ int remove_entry(const char *entry_name) {
 }
 
 int readdir_entries(const char *entry_name) {
-    DIR *edir;
+    DIR *edir = NULL;
     struct dirent *edirent = NULL;
+    char *entrypath;
     size_t entrid;
 
     edir = opendir(get_sldm_config_dir());
     if (!edir)
         return 1;
 
-    for (entrid = 0; (edirent = readdir(edir)); ++entrid) {
-        if (edirent->d_type == DT_REG) {
+    for (entrid = 0; (edirent = readdir(edir));) {
+        entrypath = sldm_config_append(edirent->d_name);
+        if (is_regfile(edirent, entrypath)) {
+            entrid++;
             if (entry_name) {
                 if (strcmp(edirent->d_name, entry_name)) {
                     printf("(%lu) %s\n", entrid, entry_name);
@@ -144,6 +147,8 @@ int readdir_entries(const char *entry_name) {
                 printf("(%lu) %s\n", entrid, edirent->d_name);
             }
         }
+        free(entrypath);
+        entrypath = NULL;
     }
     
     return 0;

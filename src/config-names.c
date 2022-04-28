@@ -18,6 +18,9 @@ char *get_home(void) {
 }
 
 char *sappend(const char *base, const char *appends) {
+    if (!appends || !base)
+        return NULL;
+
     const size_t len1 = strlen(base);
     const size_t len2 = strlen(appends);
     char *result = calloc(len1 + len2 + 1, sizeof(*result));
@@ -31,6 +34,9 @@ char *sappend(const char *base, const char *appends) {
 }
 
 char *slash_append(const char *base, const char *appends) {
+    if (!appends || !base)
+        return NULL;
+        
     const size_t len1 = strlen(base);
     const size_t len2 = strlen(appends);
     char *result = calloc(len1 + len2 + 2, sizeof(*result));
@@ -45,6 +51,9 @@ char *slash_append(const char *base, const char *appends) {
 }
 
 char *home_path_append(const char *appends) {
+    if (!appends)
+        return NULL;
+
     const char *home = get_home();
     return sappend(home, appends);
 }
@@ -72,6 +81,9 @@ char *get_sldm_config_dir(void) {
 }
 
 char *sldm_config_append(const char *appends) {
+    if (!appends)
+        return NULL;
+
     return sappend(get_sldm_config_dir(), appends);
 }
 
