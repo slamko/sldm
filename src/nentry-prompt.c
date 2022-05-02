@@ -120,14 +120,98 @@ cleanup:
 }
 
 int is_valid_entrynum(char *entrye) {
-    for (int c = 0; c != '\0'; entrye++) {
-        if (!(*entrye >= '0' && *entrye <= '9'))
+    for (int c = *entrye; (c = *entrye) != '\0'; entrye++) {
+        if (!(c >= '0' && c <= '9'))
             return 0;
     }
     return 1;
 }
 
+void run_prompt_timer(void) {
+    for (int i = prompt_timeout + 1; i > 0; i--)
+        sleep(1);
+
+    printw(NN("Timeout expired"));
+    printw("Using default entry (%d)\n\n", default_entry);
+    refresh();
+    kill(getppid(), SIGUSR1);
+    exit(0);
+}
+
+int handle_entrynum(void) {
+    char ch;
+    entryid selected_entry = default_entry;
+    struct sigaction sa1 = {0};
+    char read_buf[ENTRY_NAME_BUF_SIZE + 1] = {'\0'};
+    sa1.sa_handler = &force_runx;
+    sigaction(SIGUSR1, &sa1, NULL);
+
+    while (1) {
+        ch = getch();
+        for (size_t i = 0; i < sizeof(read_buf) - 1; i++) {
+            if (ch == '\n') {
+                read_buf[i] = ch;
+                break;
+            } else if (ch != '\n' && ch != EOF) {
+                read_buf[i] = ch;
+                ch = getch();
+            } else {
+                break;
+            }
+        }
+
+        if (read_buf[0] == '\n') {
+            return start_x(entry_table_buf[default_entry - 1]);
+        }
+
+        clean_nline();
+        distillstr(read_buf);
+
+        if (is_valid_entrynum(read_buf)) {
+            selected_entry = strtoul(read_buf, NULL, 10);
+            if (selected_entry == 0) {
+                return 0;
+            } else if (selected_entry > entry_count) {
+                printw(ENTRY_PROMPT, "Invalid entry number");
+            } else if (selected_entry > 0) {
+                return start_x(entry_table_buf[selected_entry - 1]);
+            }
+        } else {
+            int name_matches = 0, match_id = 0;
+            for (entryid i = 0; i < entry_count; i++) {
+                if (strcmp(entry_table_buf[i], read_buf) == 0) {
+                   return start_x(entry_table_buf[i]);
+                }
+                if (partialcmp(read_buf, entry_table_buf[i]) == 0) {
+                    name_matches++;
+                    match_id = i;
+                }
+            }
+
+            switch (name_matches) {
+            case 0:
+                printw(ENTRY_PROMPT, "Invalid entry name");
+                break;
+            case 1:
+                return start_x(entry_table_buf[match_id]);
+            default:
+                printw(ENTRY_PROMPT, "Disambiguous between multiple entry names");
+                break;
+            }
+        }
+
+        killtimer();
+        if (prompt_timeout > 0) {
+            timer_pid = fork();
+        }
+        if (timer_pid == 0) {
+            run_prompt_timer();
+        }
+    }
+}
+
 int nprompt_number() {
+    clean_nline();
     if (prompt_timeout > 0) {
         printw(ENTRY_PROMPT_DEFAULT, prompt_timeout);
         refresh();
@@ -138,76 +222,9 @@ int nprompt_number() {
     }
 
     if (timer_pid == 0) {
-        for (int i = prompt_timeout + 1; i > 0; i--)
-            sleep(1);
-
-        printw(NN("Timeout expired"));
-        printw("Using default entry (%d)\n\n", default_entry);
-        refresh();
-        kill(getppid(), SIGUSR1);
-        exit(0);
+        run_prompt_timer();
     } else {
-        char ch;
-        entryid selected_entry = default_entry;
-        struct sigaction sa1 = {0};
-        char read_buf[ENTRY_NAME_BUF_SIZE + 1] = {'\0'};
-        sa1.sa_handler = &force_runx;
-        sigaction(SIGUSR1, &sa1, NULL);
-
-        while (1) {
-            ch = getch();
-            for (size_t i = 0; i < sizeof(read_buf) - 1; i++) {
-                if (ch == '\n') {
-                    read_buf[i] = ch;
-                    break;
-                } else if (ch != '\n' && ch != EOF) {
-                    read_buf[i] = ch;
-                    ch = getch();
-                } else {
-                    break;
-                }
-            }
-
-            if (read_buf[0] == '\n') {
-                return start_x(entry_table_buf[default_entry - 1]);
-            }
-            clean_nline();
-
-            if (is_valid_entrynum(read_buf)) {
-                selected_entry = strtoul(read_buf, NULL, 10);
-                if (selected_entry == 0) {
-                    return 0;
-                } else if (selected_entry > entry_count) {
-                    printw(ENTRY_PROMPT, "Invalid entry number");
-                } else if (selected_entry > 0) {
-                    return start_x(entry_table_buf[selected_entry - 1]);
-                }
-            } else {
-                int name_matches = 0, match_id = 0;
-                distillstr(read_buf);
-                for (entryid i = 0; i < entry_count; i++) {
-                    if (strcmp(entry_table_buf[i], read_buf) == 0) {
-                       return start_x(entry_table_buf[i]);
-                    }
-
-                    if (partialcmp(read_buf, entry_table_buf[i]) == 0) {
-                        name_matches++;
-                        match_id = i;
-                    }
-                }
-
-                switch (name_matches) {
-                case 0:
-                    printw(ENTRY_PROMPT, "Invalid entry name");
-                    break;
-                case 1:
-                    return start_x(entry_table_buf[match_id]);
-                default:
-                    printw(ENTRY_PROMPT, "Disambiguous between multiple entry names");
-                    break;
-                }
-            }
-        }
+        return handle_entrynum();
     }
     return 0;
 }

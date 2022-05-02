@@ -155,7 +155,7 @@ int readdir_entries(const char *entry_name) {
 }
 
 int list_entries(const char *entry_name) {
-    int res;
+    int res = 1;
 
     if (entry_invalid(entry_name)) {
         entry_name = NULL;
@@ -171,7 +171,7 @@ int list_entries(const char *entry_name) {
 int show_entry(const char *entry_name) {
     FILE *entryf = NULL;
     char *show_entry_path = NULL;
-    int res;
+    int res = 1;
 
     if (entry_invalid(entry_name)) {
         error_invalid_entry();
