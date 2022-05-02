@@ -22,10 +22,13 @@ int partialcmp(const char *entry, const char *cmp) {
     elen = strnlen(entry, ENTRY_NAME_BUF_SIZE);
     cmplen = strnlen(cmp, ENTRY_NAME_BUF_SIZE);
 
+    if (elen > cmplen)
+        return 1;
+
     if (elen == cmplen) 
         return strncmp(entry, cmp, ENTRY_NAME_BUF_SIZE);
     
-    for (int i = 0; i < (elen > cmplen ? cmplen : elen); i++)
+    for (int i = 0; i < elen; i++)
     {
         if (entry[i] != cmp[i])
             return 1; 
