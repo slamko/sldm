@@ -142,7 +142,7 @@ int handle_entrynum(void) {
     char ch;
     entryid selected_entry = default_entry;
     struct sigaction sa1 = {0};
-    char read_buf[ENTRY_NAME_BUF_SIZE + 1] = {'\0'};
+    char read_buf[ENTRY_NAME_BUF_SIZE] = {'\0'};
     sa1.sa_handler = &force_runx;
     sigaction(SIGUSR1, &sa1, NULL);
 

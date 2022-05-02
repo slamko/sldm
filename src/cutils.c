@@ -3,10 +3,13 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <time.h>
 #include <stdbool.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include "command-names.h"
+#include "nentry-prompt.h"
+#include "config-names.h"
 
 int entry_invalid(const char *new_entry) {
     return !new_entry || new_entry[0] == '\0';
@@ -36,7 +39,8 @@ int partialcmp(const char *entry, const char *cmp) {
     return 0;
 }
 
-static int is_reffile_stat(const char *fpath) {
+static int is_reffile_stat(const char *ename) {
+    char *fpath = sldm_config_append(ename);
     struct stat fst;
     if (lstat(fpath, &fst) == -1)
         return false;
@@ -44,17 +48,55 @@ static int is_reffile_stat(const char *fpath) {
     return S_ISREG(fst.st_mode);
 }
 
-int is_regfile(struct dirent *finfo, const char *fpath) {
+int is_regfile(const struct dirent *finfo) {
     #ifdef _DIRENT_HAVE_D_TYPE
     switch (finfo->d_type)
     {
     case DT_REG:
         return true;
     case DT_UNKNOWN:
-        return is_reffile_stat(fpath);
+        return is_reffile_stat(finfo->d_name);
     default:
         return false;
     }
     #endif
-    return is_reffile_stat(fpath);
+    return is_reffile_stat(finfo->d_name);
+}
+
+int sort_entries(const struct dirent **entry, const struct dirent **next) {
+    struct stat sentry = {0}, snext = {0};
+    char *pentry = NULL, *pnext = NULL;
+
+    pentry = sldm_config_append((*entry)->d_name);
+    pnext = sldm_config_append((*next)->d_name);  
+
+    if (stat(pentry, &sentry) == -1) {
+        return 1;
+    }
+
+    if (stat(pnext, &snext) == -1) {
+        return -1;
+    }
+
+    free(pentry);
+    free(pnext);
+    return (int)difftime(snext.st_ctim.tv_sec, sentry.st_mtim.tv_sec);
+}
+
+void printdir_entries(struct sorted_entries sentries, const char *entry_name) {
+    entryid entrid;
+
+    for (entrid = 0; sentries.entrycnt--; free(sentries.sentries[sentries.entrycnt])) {
+        struct dirent *entry = sentries.sentries[sentries.entrycnt];
+
+        entrid++;
+        if (entry_name) {
+            if (strcmp(entry->d_name, entry_name)) {
+                printf("(%lu) %s\n", entrid, entry_name);
+                break;
+            }
+        } else {
+            printf("(%lu) %s\n", entrid, entry->d_name);
+        }
+    }
 }

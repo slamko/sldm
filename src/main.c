@@ -9,6 +9,7 @@
 #include "config-names.h"
 #include "log-utils.h"
 #include "utils.h"
+#include "nentry-prompt.h"
 
 extern int errno;
 char *add_entry_command = NULL;
@@ -124,48 +125,35 @@ int remove_entry(const char *entry_name) {
     return res;
 }
 
-int readdir_entries(const char *entry_name) {
-    DIR *edir = NULL;
-    struct dirent *edirent = NULL;
-    char *entrypath;
-    size_t entrid;
+int getdir_entries(struct sorted_entries *sentries) {
+    struct dirent **eentries = NULL;
+    int entrcount;
 
-    edir = opendir(get_sldm_config_dir());
-    if (!edir)
+    entrcount = scandir(get_sldm_config_dir(), &eentries, &is_regfile, &sort_entries);
+    if (entrcount == -1)
         return 1;
-
-    for (entrid = 0; (edirent = readdir(edir));) {
-        entrypath = sldm_config_append(edirent->d_name);
-        if (is_regfile(edirent, entrypath)) {
-            entrid++;
-            if (entry_name) {
-                if (strcmp(edirent->d_name, entry_name)) {
-                    printf("(%lu) %s\n", entrid, entry_name);
-                    break;
-                }
-            } else {
-                printf("(%lu) %s\n", entrid, edirent->d_name);
-            }
-        }
-        free(entrypath);
-        entrypath = NULL;
-    }
     
+    sentries->sentries = eentries;
+    sentries->entrycnt = entrcount;
     return 0;
 }
 
 int list_entries(const char *entry_name) {
+    struct sorted_entries sentries = {0};
     int res = 1;
 
     if (entry_invalid(entry_name)) {
         entry_name = NULL;
     }
 
-    res = readdir_entries(entry_name);
-    if (res)
+    res = getdir_entries(&sentries);
+    if (res) {
         perror(ERR_PREF);
+        return res;
+    }
 
-    return res;
+    printdir_entries(sentries, entry_name);
+    return 0;
 }
 
 int show_entry(const char *entry_name) {
