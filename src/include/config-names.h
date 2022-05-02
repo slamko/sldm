@@ -11,8 +11,10 @@
 #define _DEFAULT_ENTRY 1
 #define _PROMPT_TIMEOUT -1
 
+#include "nentry-prompt.h"
+
 extern int prompt_timeout;
-extern int default_entry;
+extern entryid default_entry;
 extern char *base_xconfig;
 
 char *sappend(const char *base, const char *appends);

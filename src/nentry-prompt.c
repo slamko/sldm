@@ -7,7 +7,9 @@
 #include <ncurses.h>
 #include <math.h>
 #include <signal.h>
+#include <ctype.h>
 #include "config-names.h"
+#include "nentry-prompt.h"
 #include "log-utils.h"
 #include "utils.h"
 
@@ -17,7 +19,7 @@
 
 #define NN(S) "\n"S"\n"
 
-int entry_count = 0;
+entryid entry_count = 0;
 int timer_pid = INITIMER_PID;
 char **entry_table_buf;
 WINDOW *win;
@@ -26,7 +28,7 @@ void entry_table_buf_dealloc(void) {
     if (!entry_table_buf)
         return;
 
-    for (int i = 0; i < entry_count; i++) {
+    for (entryid i = 0; i < entry_count; i++) {
         if (entry_table_buf[i])
             free(entry_table_buf[i]);
     }
@@ -59,7 +61,7 @@ int distillstr(char *str) {
     return 0;
 }
 
-void clean_nline() {
+void clean_nline(void) {
     wdeleteln(win);
     refresh();
 }
@@ -117,9 +119,15 @@ cleanup:
     exit(res);
 }
 
-int nprompt_number() {
-    int selected_entry = default_entry;
+int is_valid_entrynum(char *entrye) {
+    for (int c = 0; c != '\0'; entrye++) {
+        if (!(*entrye >= '0' && *entrye <= '9'))
+            return 0;
+    }
+    return 1;
+}
 
+int nprompt_number() {
     if (prompt_timeout > 0) {
         printw(ENTRY_PROMPT_DEFAULT, prompt_timeout);
         refresh();
@@ -140,15 +148,15 @@ int nprompt_number() {
         exit(0);
     } else {
         char ch;
-        int match;
+        entryid selected_entry = default_entry;
         struct sigaction sa1 = {0};
-        char read_buf[ENTRY_NAME_BUF_SIZE] = {0};
+        char read_buf[ENTRY_NAME_BUF_SIZE + 1] = {'\0'};
         sa1.sa_handler = &force_runx;
         sigaction(SIGUSR1, &sa1, NULL);
 
         while (1) {
             ch = getch();
-            for (size_t i = 0; i < sizeof(read_buf); i++) {
+            for (size_t i = 0; i < sizeof(read_buf) - 1; i++) {
                 if (ch == '\n') {
                     read_buf[i] = ch;
                     break;
@@ -163,14 +171,21 @@ int nprompt_number() {
             if (read_buf[0] == '\n') {
                 return start_x(entry_table_buf[default_entry - 1]);
             }
-
-            match = sscanf(read_buf, "%d", &selected_entry);
             clean_nline();
 
-            if (match != 1) {
+            if (is_valid_entrynum(read_buf)) {
+                selected_entry = strtoul(read_buf, NULL, 10);
+                if (selected_entry == 0) {
+                    return 0;
+                } else if (selected_entry > entry_count) {
+                    printw(ENTRY_PROMPT, "Invalid entry number");
+                } else if (selected_entry > 0) {
+                    return start_x(entry_table_buf[selected_entry - 1]);
+                }
+            } else {
                 int name_matches = 0, match_id = 0;
                 distillstr(read_buf);
-                for (int i = 0; i < entry_count; i++) {
+                for (entryid i = 0; i < entry_count; i++) {
                     if (strcmp(entry_table_buf[i], read_buf) == 0) {
                        return start_x(entry_table_buf[i]);
                     }
@@ -186,18 +201,11 @@ int nprompt_number() {
                     printw(ENTRY_PROMPT, "Invalid entry name");
                     break;
                 case 1:
-                    
                     return start_x(entry_table_buf[match_id]);
                 default:
                     printw(ENTRY_PROMPT, "Disambiguous between multiple entry names");
                     break;
                 }
-            } else if (selected_entry == 0) {
-                return 0;
-            } else if (selected_entry > entry_count || selected_entry < 0) {
-                printw(ENTRY_PROMPT, "Invalid entry number");
-            } else if (selected_entry > 0) {
-                return start_x(entry_table_buf[selected_entry - 1]);
             }
         }
     }
@@ -210,7 +218,7 @@ int nprompt(char *entry_name) {
     DIR *edir = NULL;
     struct dirent *entry = NULL;
     char *ls_command = NULL;
-    int initial_entry_count;
+    entryid initial_entry_count;
 
     if (!entry_invalid(entry_name)) {
         return start_x(entry_name);
@@ -231,8 +239,8 @@ int nprompt(char *entry_name) {
     if (!entry_table_buf)
         return res;
 
-    for (int i = 0; i < entry_count; i++) {
-        entry_table_buf[i] = (char *)calloc(ENTRY_NAME_BUF_SIZE, sizeof(**entry_table_buf));
+    for (entryid i = 0; i < entry_count; i++) {
+        entry_table_buf[i] = calloc(ENTRY_NAME_BUF_SIZE, sizeof(**entry_table_buf));
         
         if (!entry_table_buf[i]) {
             free(entry_table_buf);

@@ -7,6 +7,7 @@
 #include <errno.h>
 #include "config-names.h"
 #include "log-utils.h"
+#include "nentry-prompt.h"
 #include "main.h"
 #include "utils.h"
 
@@ -19,9 +20,9 @@ int prompt_timeout = -1;
 #endif
 
 #ifdef DEFAULT_ENTRY
-int default_entry = DEFAULT_ENTRY;
+entryid default_entry = DEFAULT_ENTRY;
 #else
-int default_entry = _DEFAULT_ENTRY;
+entryid default_entry = _DEFAULT_ENTRY;
 #endif
 
 #ifdef BASE_XCONFIG
