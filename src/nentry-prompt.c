@@ -231,24 +231,18 @@ int nprompt_number() {
 
 int nprompt(char *entry_name) {
     int res = 1;
-    FILE *lsp = NULL;
     DIR *edir = NULL;
     struct dirent *entry = NULL;
     char *ls_command = NULL;
     entryid initial_entry_count;
+    struct sorted_entries sentries;
 
     if (!entry_invalid(entry_name)) {
         return start_x(entry_name);
     }
 
-    edir = opendir(get_sldm_config_dir());
-    if (!edir)
-        return res;
-
-    while ((entry = readdir(edir))) {
-        if (entry->d_type == DT_REG)
-            entry_count++;
-    }
+    getdir_entries(&sentries);
+    entry_count = sentries.entrycnt;
     initial_entry_count = entry_count;
     closedir(edir);
 
@@ -266,27 +260,12 @@ int nprompt(char *entry_name) {
     }
 
     entry_count = 0;
-    ls_command = sappend(ENTRY_SORT, get_sldm_config_dir());
-
-    lsp = popen(ls_command, "r");
-    if (!lsp) 
-        return res;
-
     win = initscr();
     win->_scroll = true;
 
     printw("Choose an entry (default: %d):\n", default_entry);
 
-    while (entry_count < initial_entry_count && 
-        fgets(entry_table_buf[entry_count], ENTRY_NAME_BUF_SIZE, lsp) != 0) {
-        printw("(%d) %s", entry_count + 1, entry_table_buf[entry_count]);
-        distillstr(entry_table_buf[entry_count]);
-        
-        entry_count++;
-    }
-
-    pclose(lsp); 
-    free(ls_command);
+    printdir_entries(&sentries, NULL, NULL);
 
     printw(NN("(0) Exit"));
     refresh();

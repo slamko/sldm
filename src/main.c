@@ -125,17 +125,14 @@ int remove_entry(const char *entry_name) {
     return res;
 }
 
-int getdir_entries(struct sorted_entries *sentries) {
-    struct dirent **eentries = NULL;
-    int entrcount;
-
-    entrcount = scandir(get_sldm_config_dir(), &eentries, &is_regfile, &sort_entries);
-    if (entrcount == -1)
-        return 1;
-    
-    sentries->sentries = eentries;
-    sentries->entrycnt = entrcount;
-    return 0;
+void cond_prin_entry(const struct dirent *entry, const char *entry_name, entryid entrid) {
+    if (entry_name) {
+        if (strcmp(entry->d_name, entry_name)) {
+            printf("(%lu) %s\n", entrid, entry_name);
+        }
+    } else {
+        printf("(%lu) %s\n", entrid, entry->d_name);
+    }
 }
 
 int list_entries(const char *entry_name) {
@@ -152,7 +149,7 @@ int list_entries(const char *entry_name) {
         return res;
     }
 
-    printdir_entries(sentries, entry_name);
+    printdir_entries(&sentries, entry_name, NULL);
     return 0;
 }
 

@@ -7,9 +7,11 @@
 #include <stdbool.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <ncurses.h>
 #include "command-names.h"
 #include "nentry-prompt.h"
 #include "config-names.h"
+#include "utils.h"
 
 int entry_invalid(const char *new_entry) {
     return !new_entry || new_entry[0] == '\0';
@@ -83,20 +85,38 @@ int sort_entries(const struct dirent **entry, const struct dirent **next) {
     return (int)difftime(snext.st_ctim.tv_sec, sentry.st_mtim.tv_sec);
 }
 
-void printdir_entries(struct sorted_entries sentries, const char *entry_name) {
+void printf_entry(const char *entry_name, const entryid entrid) {
+    printf("(%lu) %s\n", entrid, entry_name);
+}
+
+void printw_entry(const char *entry_name, const entryid entrid) {
+    printw("(%lu) %s\n", entrid, entry_name);
+}
+
+
+
+void printdir_entries(struct sorted_entries *sentries, const char *entry_name, onprint_cb onprint) {
     entryid entrid;
+    int entrycnt = sentries->entrycnt;
 
-    for (entrid = 0; sentries.entrycnt--; free(sentries.sentries[sentries.entrycnt])) {
-        struct dirent *entry = sentries.sentries[sentries.entrycnt];
+    for (entrid = 0; entrycnt--; free(sentries->sentries[entrycnt])) {
+        struct dirent *entry = sentries->sentries[entrycnt];
 
+        onprint(entry);
         entrid++;
-        if (entry_name) {
-            if (strcmp(entry->d_name, entry_name)) {
-                printf("(%lu) %s\n", entrid, entry_name);
-                break;
-            }
-        } else {
-            printf("(%lu) %s\n", entrid, entry->d_name);
-        }
+
     }
+}
+
+int getdir_entries(struct sorted_entries *sentries) {
+    struct dirent **eentries = NULL;
+    int entrcount;
+
+    entrcount = scandir(get_sldm_config_dir(), &eentries, &is_regfile, &sort_entries);
+    if (entrcount == -1)
+        return 1;
+    
+    sentries->sentries = eentries;
+    sentries->entrycnt = entrcount;
+    return 0;
 }
