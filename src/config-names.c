@@ -8,7 +8,9 @@
 #include "config-names.h"
 #include "log-utils.h"
 
-char *home = NULL;
+char *home;
+char *xinitrc;
+char *sldm_config_dir;
 
 char *get_home(void) {
     if (!home)
@@ -58,16 +60,12 @@ char *home_path_append(const char *appends) {
     return sappend(home, appends);
 }
 
-char *xinitrc = NULL;
-
 char *get_xinitrc_l(void) {
     if (!xinitrc) 
         xinitrc = home_path_append(XINITRC_L);
 
     return xinitrc;
 }
-
-char *sldm_config_dir = NULL;
 
 char *get_sldm_config_dir(void) {
     if (!sldm_config_dir) 

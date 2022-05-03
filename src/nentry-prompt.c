@@ -16,22 +16,22 @@
 #define ENTRY_PROMPT "\rProvide an entry name or number (%s): "
 #define ENTRY_PROMPT_DEFAULT "\rProvide an entry name or number (timeout: %ds): "
 #define INITIMER_PID -1
+#define READ_USR_ENTRY 1
 
 #define NN(S) "\n"S"\n"
 
 entryid entry_count = 0;
 int timer_pid = INITIMER_PID;
 char **entry_table_buf;
+char *bufval;
 WINDOW *win;
 
 static void entry_table_buf_dealloc(void) {
     if (!entry_table_buf)
         return;
 
-    for (entryid i = 0; i < entry_count; i++) {
-        if (entry_table_buf[i])
-            free(entry_table_buf[i]);
-    }
+    free(bufval);
+    bufval = NULL;
     free(entry_table_buf);
     entry_table_buf = NULL;
 }
@@ -120,8 +120,11 @@ cleanup:
 }
 
 static int is_valid_entrynum(char *entrye) {
+    if (!entrye)
+        return 0;
+
     for (int c = *entrye; (c = *entrye) != '\0'; entrye++) {
-        if (!(c >= '0' && c <= '9'))
+        if (!isdigit(c))
             return 0;
     }
     return 1;
@@ -138,27 +141,32 @@ static void run_prompt_timer(void) {
     exit(0);
 }
 
-static int handle_entrynum(void) {
+static void read_user_entry(char *read_buf, size_t readbuf_siz) {
     char ch;
-    entryid selected_entry = default_entry;
-    struct sigaction sa1 = {0};
-    char read_buf[ENTRY_NAME_BUF_SIZE] = {'\0'};
-    sa1.sa_handler = &force_runx;
-    sigaction(SIGUSR1, &sa1, NULL);
 
-    while (1) {
-        ch = getch();
-        for (size_t i = 0; i < sizeof(read_buf) - 1; i++) {
-            if (ch == '\n') {
-                read_buf[i] = ch;
-                break;
-            } else if (ch != '\n' && ch != EOF) {
-                read_buf[i] = ch;
-                ch = getch();
-            } else {
-                break;
-            }
+    ch = getch();
+    for (size_t i = 0; i < readbuf_siz - 1; i++) {
+        if (ch == '\n') {
+            read_buf[i] = ch;
+            break;
+        } else if (ch != '\n' && ch != EOF) {
+            read_buf[i] = ch;
+            ch = getch();
+        } else {
+            break;
         }
+    }
+}
+
+static int handle_entrynum(void) {
+    char read_buf[ENTRY_NAME_BUF_SIZE] = {'\0'};
+    struct sigaction timer_sig = {0};
+
+    timer_sig.sa_handler = &force_runx;
+    sigaction(SIGUSR1, &timer_sig, NULL);
+
+    while (READ_USR_ENTRY) {
+        read_user_entry(read_buf, sizeof(read_buf));
 
         if (read_buf[0] == '\n') {
             return start_x(entry_table_buf[default_entry - 1]);
@@ -168,7 +176,7 @@ static int handle_entrynum(void) {
         distillstr(read_buf);
 
         if (is_valid_entrynum(read_buf)) {
-            selected_entry = strtoul(read_buf, NULL, 10);
+            entryid selected_entry = strtoul(read_buf, NULL, 10);
             if (selected_entry == 0) {
                 return 0;
             } else if (selected_entry > entry_count) {
@@ -229,8 +237,43 @@ static int nprompt_number() {
     return 0;
 }
 
-int nprompt(char *entry_name) {
+static void print_entry_menu(struct sorted_entries *sentries) {
     struct dirent *centry = NULL;
+
+    printw("Choose an entry (default: %d):\n", default_entry);
+    for (entryid eid = 1; (centry = iter_entry(sentries)); eid++) {
+        strncpy(entry_table_buf[eid - 1], centry->d_name, ENTRY_NAME_BUF_SIZE);
+        entry_table_buf[eid - 1][ENTRY_NAME_BUF_SIZE - 1] = '\0';
+        printw_entry(centry->d_name, eid);
+        free(centry);
+    }
+
+    destroy_dentries_iterator(sentries);
+    printw(NN("(0) Exit"));
+    refresh();
+}
+
+static int alloc_entry_buf(void) {
+    bufval = NULL;
+
+    entry_table_buf = (char **)calloc(entry_count, sizeof(*entry_table_buf));
+    if (!entry_table_buf)
+        return 1;
+
+    bufval = calloc(ENTRY_NAME_BUF_SIZE * entry_count, sizeof(**entry_table_buf));
+    if (!bufval) {
+        free(entry_table_buf);
+        entry_table_buf = NULL;
+        return 1;
+    }
+
+    for (entryid i = 0; i < entry_count; i++)
+        entry_table_buf[i] = bufval + (ENTRY_NAME_BUF_SIZE * i);
+    
+    return 0;
+}
+
+int nprompt(char *entry_name) {
     struct sorted_entries sentries = {0};
     int res = 1;
 
@@ -241,35 +284,16 @@ int nprompt(char *entry_name) {
     getdir_entries(&sentries);
     entry_count = sentries.entrycnt;
 
-    entry_table_buf = (char **)calloc(entry_count, sizeof(*entry_table_buf));
-    if (!entry_table_buf)
+    if (alloc_entry_buf()) 
         return res;
-
-    for (entryid i = 0; i < entry_count; i++) {
-        entry_table_buf[i] = calloc(ENTRY_NAME_BUF_SIZE + 1, sizeof(**entry_table_buf));
-        
-        if (!entry_table_buf[i]) {
-            free(entry_table_buf);
-            return res;
-        }
-    }
 
     win = initscr();
     win->_scroll = true;
-    printw("Choose an entry (default: %d):\n", default_entry);
 
-    for (entryid eid = 1; (centry = iter_entry(&sentries)); eid++) {
-        strncpy(entry_table_buf[eid - 1], centry->d_name, ENTRY_NAME_BUF_SIZE);
-        printw_entry(centry->d_name, eid);
-        free(centry);
-    }
-
-    destroy_dentries_iterator(&sentries);
-    printw(NN("(0) Exit"));
-    refresh();
-
+    print_entry_menu(&sentries);
     res = nprompt_number();
     killtimer();
     ncleanup();
+
     return res;
 }
