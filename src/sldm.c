@@ -32,19 +32,6 @@ char *base_xconfig = NULL;
 #define CONFIG_UNDEFINED 
 #endif
 
-int not_in_tty(void) {
-    char tty_output[TTY_MIN_NAME_LEN];
-    int cmp = 1;
-
-    if (ttyname_r(STDIN_FILENO, tty_output, sizeof(tty_output)) == 0) {
-        cmp = strncmp(tty_output, TTY_DEVICE, TTY_DEVICE_NAME_BYTES);
-    } else if (errno != ENODEV) {
-        perror(ERR_PREF);
-    }
-
-    return cmp;
-} 
-
 enum target {
     ADD_ENTRY = 0,
     REMOVE_ENTRY = 1,
@@ -58,7 +45,7 @@ struct args {
     char *entry_name;
 };
 
-void print_usage() {
+static void print_usage() {
     printf(
     "\n Usage: \n"
     "\tsldm add <entry> <exec>\n"
@@ -70,7 +57,7 @@ void print_usage() {
     "\t-r    force run xorg if an entry name in the same as the commands above\n\n");
 }
 
-int parse_args(int argc, char **argv, struct args *args) {
+static int parse_args(int argc, char **argv, struct args *args) {
     char *target = NULL;
     args->target = PROMPT;
     args->entry_name = NULL;
@@ -143,7 +130,7 @@ int parse_args(int argc, char **argv, struct args *args) {
     return 0;
 }
 
-int check_prompt_config() {
+static int check_prompt_config() {
     if (default_entry <= 0) {
         error("\nInvalid default entry (%d)", default_entry);
         return EXIT_FAILURE;
@@ -152,7 +139,7 @@ int check_prompt_config() {
     return EXIT_SUCCESS;
 }
 
-int check_xconfig() {
+static int check_xconfig() {
     wordexp_t exp_result;
 
     #ifdef CONFIG_UNDEFINED
@@ -177,7 +164,7 @@ int check_xconfig() {
     return !base_xconfig;
 }
 
-void clean(struct args *arg) {
+static void clean(struct args *arg) {
     cleanup_names();
     if (base_xconfig) {
         free(base_xconfig);

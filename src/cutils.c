@@ -8,14 +8,29 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <ncurses.h>
+#include <errno.h>
 #include "command-names.h"
 #include "nentry-prompt.h"
 #include "config-names.h"
 #include "utils.h"
+#include "log-utils.h"
 
 int entry_invalid(const char *new_entry) {
     return !new_entry || new_entry[0] == '\0';
 }
+
+int not_in_tty(void) {
+    char tty_output[TTY_MIN_NAME_LEN];
+    int cmp = 1;
+
+    if (ttyname_r(STDIN_FILENO, tty_output, sizeof(tty_output)) == 0) {
+        cmp = strncmp(tty_output, TTY_DEVICE, TTY_DEVICE_NAME_BYTES);
+    } else if (errno != ENODEV) {
+        perror(ERR_PREF);
+    }
+
+    return cmp;
+} 
 
 int partialcmp(const char *entry, const char *cmp) {
     int elen;
@@ -41,9 +56,10 @@ int partialcmp(const char *entry, const char *cmp) {
     return 0;
 }
 
-static int is_reffile_stat(const char *ename) {
+static int is_regfile_stat(const char *ename) {
     char *fpath = sldm_config_append(ename);
-    struct stat fst;
+    struct stat fst = {0};
+
     if (lstat(fpath, &fst) == -1)
         return false;
 
@@ -57,12 +73,12 @@ int is_regfile(const struct dirent *finfo) {
     case DT_REG:
         return true;
     case DT_UNKNOWN:
-        return is_reffile_stat(finfo->d_name);
+        return is_regfile_stat(finfo->d_name);
     default:
         return false;
     }
     #endif
-    return is_reffile_stat(finfo->d_name);
+    return is_regfile_stat(finfo->d_name);
 }
 
 int sort_entries(const struct dirent **entry, const struct dirent **next) {

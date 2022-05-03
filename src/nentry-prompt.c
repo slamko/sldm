@@ -24,7 +24,7 @@ int timer_pid = INITIMER_PID;
 char **entry_table_buf;
 WINDOW *win;
 
-void entry_table_buf_dealloc(void) {
+static void entry_table_buf_dealloc(void) {
     if (!entry_table_buf)
         return;
 
@@ -36,21 +36,21 @@ void entry_table_buf_dealloc(void) {
     entry_table_buf = NULL;
 }
 
-void ncleanup(void) {
+static void ncleanup(void) {
     entry_table_buf_dealloc();
     wclear(win);
     refresh();
     endwin();
 }
 
-void killtimer(void) {
+static void killtimer(void) {
     if (timer_pid > 0) {
         kill(timer_pid, SIGKILL);
         timer_pid = INITIMER_PID;
     }
 }
 
-int distillstr(char *str) {
+static int distillstr(char *str) {
     if (!str)
         return 1;
 
@@ -61,12 +61,12 @@ int distillstr(char *str) {
     return 0;
 }
 
-void clean_nline(void) {
+static void clean_nline(void) {
     wdeleteln(win);
     refresh();
 }
 
-int start_x(char *entry_name) {
+static int start_x(char *entry_name) {
     char *entry_config_path = NULL;
     int pid;
     int res = 1;
@@ -103,7 +103,7 @@ cleanup:
     return res;
 }
 
-void force_runx() {
+static void force_runx() {
     int res = 1;
     sleep(1);
 
@@ -119,7 +119,7 @@ cleanup:
     exit(res);
 }
 
-int is_valid_entrynum(char *entrye) {
+static int is_valid_entrynum(char *entrye) {
     for (int c = *entrye; (c = *entrye) != '\0'; entrye++) {
         if (!(c >= '0' && c <= '9'))
             return 0;
@@ -127,7 +127,7 @@ int is_valid_entrynum(char *entrye) {
     return 1;
 }
 
-void run_prompt_timer(void) {
+static void run_prompt_timer(void) {
     for (int i = prompt_timeout + 1; i > 0; i--)
         sleep(1);
 
@@ -138,7 +138,7 @@ void run_prompt_timer(void) {
     exit(0);
 }
 
-int handle_entrynum(void) {
+static int handle_entrynum(void) {
     char ch;
     entryid selected_entry = default_entry;
     struct sigaction sa1 = {0};
@@ -210,7 +210,7 @@ int handle_entrynum(void) {
     }
 }
 
-int nprompt_number() {
+static int nprompt_number() {
     clean_nline();
     if (prompt_timeout > 0) {
         printw(ENTRY_PROMPT_DEFAULT, prompt_timeout);
@@ -230,9 +230,9 @@ int nprompt_number() {
 }
 
 int nprompt(char *entry_name) {
-    int res = 1;
     struct dirent *centry = NULL;
-    struct sorted_entries sentries;
+    struct sorted_entries sentries = {0};
+    int res = 1;
 
     if (!entry_invalid(entry_name)) {
         return start_x(entry_name);

@@ -40,9 +40,9 @@ static int write_exec_command(FILE *fp) {
 }
 
 static int copy_base_config(char *new_entry_path) {
-    char xconfig_ch;
     FILE *xinitrc = NULL;
     FILE *new_entry = NULL;
+    char xconfig_ch;
     int res = 1;
 
     if (!get_xconfig() || access(get_xconfig(), R_OK)) {
@@ -125,7 +125,7 @@ int remove_entry(const char *entry_name) {
     return res;
 }
 
-void cond_prinentry(const struct dirent *entry, const char *entry_name, entryid entrid) {
+static void cond_prinentry(const struct dirent *entry, const char *entry_name, entryid entrid) {
     if (entry_name) {
         if (strcmp(entry->d_name, entry_name)) {
             printf_entry(entry_name, entrid);

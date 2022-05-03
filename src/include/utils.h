@@ -3,6 +3,8 @@
 
 int entry_invalid(const char *new_entry);
 
+int not_in_tty(void);
+
 int partialcmp(const char *entry, const char *cmp);
 
 int is_regfile(const struct dirent *finfo);
@@ -12,8 +14,6 @@ int sort_entries(const struct dirent **entry, const struct dirent **next);
 void printf_entry(const char *entry_name, const entryid entrid);
 
 void printw_entry(const char *entry_name, const entryid entrid);
-
-typedef void (*onprint_cb)(const struct dirent *dentry);
 
 void destroy_dentries_iterator(struct sorted_entries *sentries);
 

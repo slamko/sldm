@@ -8,9 +8,9 @@
 
 #define TTY_DEVICE "/dev/tty"
 #define TTY_DEVICE_NAME_BYTES (sizeof(TTY_DEVICE) - 1)
-#define TTY_MIN_NAME_LEN sizeof("/dev/pts/")
+#define TTY_MIN_NAME "/dev/pts/"
+#define TTY_MIN_NAME_LEN sizeof(TTY_MIN_NAME)
 #define STARTX "/bin/startx"
-#define ENTRY_SORT "/bin/ls --sort=time --time=creation -tr "
 
 #define EXEC_C "\nexec"
 #define EXEC_C_LENGTH (sizeof(EXEC_C) - 1)
