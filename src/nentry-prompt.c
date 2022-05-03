@@ -231,10 +231,7 @@ int nprompt_number() {
 
 int nprompt(char *entry_name) {
     int res = 1;
-    DIR *edir = NULL;
-    struct dirent *entry = NULL;
-    char *ls_command = NULL;
-    entryid initial_entry_count;
+    struct dirent *centry = NULL;
     struct sorted_entries sentries;
 
     if (!entry_invalid(entry_name)) {
@@ -243,15 +240,13 @@ int nprompt(char *entry_name) {
 
     getdir_entries(&sentries);
     entry_count = sentries.entrycnt;
-    initial_entry_count = entry_count;
-    closedir(edir);
 
     entry_table_buf = (char **)calloc(entry_count, sizeof(*entry_table_buf));
     if (!entry_table_buf)
         return res;
 
     for (entryid i = 0; i < entry_count; i++) {
-        entry_table_buf[i] = calloc(ENTRY_NAME_BUF_SIZE, sizeof(**entry_table_buf));
+        entry_table_buf[i] = calloc(ENTRY_NAME_BUF_SIZE + 1, sizeof(**entry_table_buf));
         
         if (!entry_table_buf[i]) {
             free(entry_table_buf);
@@ -259,14 +254,17 @@ int nprompt(char *entry_name) {
         }
     }
 
-    entry_count = 0;
     win = initscr();
     win->_scroll = true;
-
     printw("Choose an entry (default: %d):\n", default_entry);
 
-    printdir_entries(&sentries, NULL, NULL);
+    for (entryid eid = 1; (centry = iter_entry(&sentries)); eid++) {
+        strncpy(entry_table_buf[eid - 1], centry->d_name, ENTRY_NAME_BUF_SIZE);
+        printw_entry(centry->d_name, eid);
+        free(centry);
+    }
 
+    destroy_dentries_iterator(&sentries);
     printw(NN("(0) Exit"));
     refresh();
 

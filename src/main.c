@@ -125,18 +125,19 @@ int remove_entry(const char *entry_name) {
     return res;
 }
 
-void cond_prin_entry(const struct dirent *entry, const char *entry_name, entryid entrid) {
+void cond_prinentry(const struct dirent *entry, const char *entry_name, entryid entrid) {
     if (entry_name) {
         if (strcmp(entry->d_name, entry_name)) {
-            printf("(%lu) %s\n", entrid, entry_name);
+            printf_entry(entry_name, entrid);
         }
     } else {
-        printf("(%lu) %s\n", entrid, entry->d_name);
+        printf_entry(entry->d_name, entrid);
     }
 }
 
 int list_entries(const char *entry_name) {
     struct sorted_entries sentries = {0};
+    struct dirent *centry = NULL;
     int res = 1;
 
     if (entry_invalid(entry_name)) {
@@ -149,7 +150,12 @@ int list_entries(const char *entry_name) {
         return res;
     }
 
-    printdir_entries(&sentries, entry_name, NULL);
+    for (entryid eid = 1; (centry = iter_entry(&sentries)); eid++) {
+        cond_prinentry(centry, entry_name, eid);
+        free(centry);
+    }
+
+    destroy_dentries_iterator(&sentries);
     return 0;
 }
 

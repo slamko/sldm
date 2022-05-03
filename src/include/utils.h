@@ -9,8 +9,14 @@ int is_regfile(const struct dirent *finfo);
 
 int sort_entries(const struct dirent **entry, const struct dirent **next);
 
+void printf_entry(const char *entry_name, const entryid entrid);
+
+void printw_entry(const char *entry_name, const entryid entrid);
+
 typedef void (*onprint_cb)(const struct dirent *dentry);
 
-int printdir_entries(struct sorted_entries *sentries, const char *entry_name, onprint_cb onprint);
+void destroy_dentries_iterator(struct sorted_entries *sentries);
+
+struct dirent *iter_entry(struct sorted_entries *sentries);
 
 int getdir_entries(struct sorted_entries *sentries);

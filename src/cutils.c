@@ -93,19 +93,20 @@ void printw_entry(const char *entry_name, const entryid entrid) {
     printw("(%lu) %s\n", entrid, entry_name);
 }
 
-
-
-void printdir_entries(struct sorted_entries *sentries, const char *entry_name, onprint_cb onprint) {
-    entryid entrid;
-    int entrycnt = sentries->entrycnt;
-
-    for (entrid = 0; entrycnt--; free(sentries->sentries[entrycnt])) {
-        struct dirent *entry = sentries->sentries[entrycnt];
-
-        onprint(entry);
-        entrid++;
-
+void destroy_dentries_iterator(struct sorted_entries *sentries) {
+    if (sentries->sentries) {
+        free(sentries->sentries);
+        sentries->sentries = NULL;
     }
+}
+
+struct dirent *iter_entry(struct sorted_entries *sentries) {
+    sentries->entrycnt--;
+    if (sentries->entrycnt >= 0) 
+        return sentries->sentries[sentries->entrycnt];
+    
+
+    return NULL;
 }
 
 int getdir_entries(struct sorted_entries *sentries) {
