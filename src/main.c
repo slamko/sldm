@@ -5,7 +5,10 @@
 #include <dirent.h>
 #include <errno.h>
 #include <signal.h>
+#include <fcntl.h>
 #include <sys/wait.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
 #include "config-names.h"
 #include "log-utils.h"
 #include "utils.h"
@@ -160,8 +163,8 @@ int list_entries(const char *entry_name) {
 }
 
 int show_entry(const char *entry_name) {
-    FILE *entryf = NULL;
     char *show_entry_path = NULL;
+    int entryfd;
     int res = 1;
 
     if (entry_invalid(entry_name)) {
@@ -170,20 +173,30 @@ int show_entry(const char *entry_name) {
     }
 
     show_entry_path = sldm_config_append(entry_name);
-    entryf = fopen(show_entry_path, "r");
+    entryfd = open(show_entry_path, O_RDONLY);
 
-    if (entryf) {
-        for(char cch = fgetc(entryf); cch != EOF; cch = fgetc(entryf))
-            fputc(cch, stdout);
+    if (entryfd != -1) {
+        struct stat entry_st;
+        FILE *entrymap = NULL;
+
+        if (fstat(entryfd, &entry_st) == -1) {
+            perror(ERR_PREF);
+            goto cleanup;
+        }
         
+        entrymap =  mmap(NULL, entry_st.st_size, PROT_READ, MAP_PRIVATE, entryfd, 0);
+        res = (write(STDOUT_FILENO, entrymap, entry_st.st_size) != -1);
         fputc('\n', stdout);
-    } else if (errno == ENOENT) {
+        munmap(entrymap, entry_st.st_size);
+    } else if (errno == EACCES) {
         err_noentry_found(entry_name);
     } else {
         perror(ERR_PREF);
     }
 
+cleanup:
     free(show_entry_path);
+    close(entryfd);
     return res;
 }
 
