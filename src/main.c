@@ -14,24 +14,21 @@
 #include "utils.h"
 #include "nentry-prompt.h"
 
-extern int errno;
 char *add_entry_command = NULL;
 
 static int write_exec_command(FILE *fp) {
     char *exec_line = NULL;
-    char *exec_command = NULL;
+    int addcmd_len = strnlen(add_entry_command, ENTRY_CMD_BUF_LEN);
 
-    exec_line = calloc(EXEC_C_LENGTH + 1 + strlen(add_entry_command) + 1, sizeof(*exec_line));
+    exec_line = calloc(EXEC_C_LENGTH + 1 + addcmd_len + 1, sizeof(*exec_line));
 
     if (!exec_line) {
-        fclose(fp);
         return 1;
     }
 
-    exec_command = EXEC_C;
-    strcpy(exec_line, exec_command);
+    strcpy(exec_line, EXEC_C);
     exec_line[EXEC_C_LENGTH] = ' ';
-    strcpy(exec_line + EXEC_C_LENGTH + 1, add_entry_command);
+    strncpy(exec_line + EXEC_C_LENGTH + 1, add_entry_command, addcmd_len);
 
     if (fputs(exec_line, fp) == EOF) {
         free(exec_line);
@@ -60,18 +57,24 @@ static int copy_base_config(char *new_entry_path) {
     }
 
     xinitrc = fopen(get_xconfig(), "r");
-    new_entry = fopen(new_entry_path, "w");
-    if (!new_entry)
+    if (!xinitrc) {
         return res;
+    }
+
+    new_entry = fopen(new_entry_path, "w");
+    if (!new_entry) {
+        goto close_xinitrc;
+    }
 
     while ((xconfig_ch = fgetc(xinitrc)) != EOF) {
         fputc(xconfig_ch, new_entry);
     }
     
     res = write_exec_command(new_entry);
-    fclose(xinitrc);
-    fclose(new_entry);
 
+    fclose(new_entry);
+close_xinitrc:
+    fclose(xinitrc);
     return res;
 }
 
@@ -165,6 +168,8 @@ int list_entries(const char *entry_name) {
 int show_entry(const char *entry_name) {
     char *show_entry_path = NULL;
     FILE *entryfp = NULL;
+    struct stat entry_st;
+    char *entrybuf = NULL;
     int res = 1;
 
     if (entry_invalid(entry_name)) {
@@ -175,33 +180,34 @@ int show_entry(const char *entry_name) {
     show_entry_path = sldm_config_append(entry_name);
     entryfp = fopen(show_entry_path, "r");
 
-    if (entryfp) {
-        struct stat entry_st;
-        char *entrybuf = NULL;
-
-        if (stat(show_entry_path, &entry_st) == -1) {
+    if (!entryfp) {
+        if (errno == ENOENT)
+            err_noentry_found(entry_name);
+        else 
             perror(ERR_PREF);
-            goto cleanup;
-        }
 
-        entrybuf = calloc(entry_st.st_size, sizeof(*entrybuf));
-        if (!entrybuf) {
-            perror(ERR_PREF);
-            goto cleanup;
-        }
-
-        fread(entrybuf, sizeof(*entrybuf), entry_st.st_size, entryfp);        
-        res = (write(STDOUT_FILENO, entrybuf, entry_st.st_size) != -1);
-        fputc('\n', stdout);
-    } else if (errno == EACCES) {
-        err_noentry_found(entry_name);
-    } else {
-        perror(ERR_PREF);
+        goto cleanup_entryp;
     }
 
+    if (stat(show_entry_path, &entry_st) == -1) {
+        perror(ERR_PREF);
+        goto cleanup;
+    }
+
+    entrybuf = calloc(entry_st.st_size, sizeof(*entrybuf));
+    if (!entrybuf) {
+        perror(ERR_PREF);
+        goto cleanup;
+    }
+
+    fread(entrybuf, sizeof(*entrybuf), entry_st.st_size, entryfp);        
+    res = write(STDOUT_FILENO, entrybuf, entry_st.st_size) != -1;
+    fputc('\n', stdout);
+
 cleanup:
-    free(show_entry_path);
     fclose(entryfp);
+cleanup_entryp:
+    free(show_entry_path);
     return res;
 }
 

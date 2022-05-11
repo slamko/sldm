@@ -8,9 +8,9 @@
 #include "config-names.h"
 #include "log-utils.h"
 
-char *home;
-char *xinitrc;
-char *sldm_config_dir;
+static char *home;
+static char *xinitrc;
+static char *sldm_config_dir;
 
 char *get_home(void) {
     if (!home)

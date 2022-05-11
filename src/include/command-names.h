@@ -15,6 +15,7 @@
 #define EXEC_C "\nexec"
 #define EXEC_C_LENGTH (sizeof(EXEC_C) - 1)
 #define ENTRY_NAME_BUF_SIZE 256
+#define ENTRY_CMD_BUF_LEN 4096
 
 #endif
 
