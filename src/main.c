@@ -164,7 +164,7 @@ int list_entries(const char *entry_name) {
 
 int show_entry(const char *entry_name) {
     char *show_entry_path = NULL;
-    int entryfd;
+    FILE *entryfp = NULL;
     int res = 1;
 
     if (entry_invalid(entry_name)) {
@@ -173,21 +173,26 @@ int show_entry(const char *entry_name) {
     }
 
     show_entry_path = sldm_config_append(entry_name);
-    entryfd = open(show_entry_path, O_RDONLY);
+    entryfp = fopen(show_entry_path, "r");
 
-    if (entryfd != -1) {
+    if (entryfp) {
         struct stat entry_st;
-        FILE *entrymap = NULL;
+        char *entrybuf = NULL;
 
-        if (fstat(entryfd, &entry_st) == -1) {
+        if (stat(show_entry_path, &entry_st) == -1) {
             perror(ERR_PREF);
             goto cleanup;
         }
-        
-        entrymap =  mmap(NULL, entry_st.st_size, PROT_READ, MAP_PRIVATE, entryfd, 0);
-        res = (write(STDOUT_FILENO, entrymap, entry_st.st_size) != -1);
+
+        entrybuf = calloc(entry_st.st_size, sizeof(*entrybuf));
+        if (!entrybuf) {
+            perror(ERR_PREF);
+            goto cleanup;
+        }
+
+        fread(entrybuf, sizeof(*entrybuf), entry_st.st_size, entryfp);        
+        res = (write(STDOUT_FILENO, entrybuf, entry_st.st_size) != -1);
         fputc('\n', stdout);
-        munmap(entrymap, entry_st.st_size);
     } else if (errno == EACCES) {
         err_noentry_found(entry_name);
     } else {
@@ -196,7 +201,7 @@ int show_entry(const char *entry_name) {
 
 cleanup:
     free(show_entry_path);
-    close(entryfd);
+    fclose(entryfp);
     return res;
 }
 
