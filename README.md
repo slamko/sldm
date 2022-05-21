@@ -20,13 +20,20 @@ sudo yum install ncurses-devel
 sudo dnf install ncurses-devel
 ```
 
-Build:
+Install:
 ```
 git clone https://github.com/slamko/sldm
 cd sldm
+autoreconf -ivf
+./configure
+make
 sudo make install
 ```
-*Sldm* is designed not to be tied to systemd or SysVinit, it is just a command line tool to be run in tty, so you can simply add something like this to your .bashrc/whatever: 
+
+(More install-related information in [INSTALL](https://github.com/slamko/sldm/blob/master/INSTALL))  
+
+
+*SLDM* is designed not to be tied to systemd or SysVinit, it is just a command line tool to be run in tty, so you can simply add something like this to your .bashrc/whatever: 
 ```
 [ $(tty) = "/dev/tty1" ] && sldm
 ```  
