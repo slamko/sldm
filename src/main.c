@@ -131,9 +131,9 @@ int remove_entry(const char *entry_name) {
     return res;
 }
 
-static void cond_prinentry(const struct dirent *entry, const char *entry_name, entryid entrid) {
+static void conditional_prinentry(const struct dirent *entry, const char *entry_name, entryid entrid) {
     if (entry_name) {
-        if (strcmp(entry->d_name, entry_name)) {
+        if (strcmp(entry->d_name, entry_name) == 0) {
             printf_entry(entry_name, entrid);
         }
     } else {
@@ -157,7 +157,7 @@ int list_entries(const char *entry_name) {
     }
 
     for (entryid eid = 1; (centry = iter_entry(&sentries)); eid++) {
-        cond_prinentry(centry, entry_name, eid);
+        conditional_prinentry(centry, entry_name, eid);
         free(centry);
     }
 
@@ -181,11 +181,12 @@ int show_entry(const char *entry_name) {
     entryfp = fopen(show_entry_path, "r");
 
     if (!entryfp) {
-        if (errno == ENOENT)
+        if (errno == ENOENT) {
             err_noentry_found(entry_name);
-        else 
+        } else { 
             perror(ERR_PREF);
-
+        }
+        
         goto cleanup_entryp;
     }
 

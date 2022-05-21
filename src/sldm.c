@@ -132,7 +132,7 @@ static int parse_args(int argc, char **argv, struct args *args) {
 
 static int check_prompt_config() {
     if (default_entry <= 0) {
-        error("\nInvalid default entry (%d)", default_entry);
+        error("Invalid default entry (%d)", default_entry);
         return EXIT_FAILURE;
     }
 
