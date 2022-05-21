@@ -3,6 +3,7 @@
 
 AC_PREREQ([2.69])
 AC_INIT([sldm], [VERSION], [vaceslavkozin619@gmail.com])
+AC_CONFIG_AUX_DIR([autotools-aux])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_SRCDIR([src/sldm.c])
 AC_CONFIG_HEADERS([autoconfig.h])

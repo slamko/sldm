@@ -5,7 +5,7 @@
 
 extern char **entry_table_buf;
 
-int nprompt(char *entry_name);
+int nprompt(const char *entry_name);
 
 typedef unsigned long entryid;
 

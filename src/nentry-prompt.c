@@ -66,7 +66,7 @@ static void clean_nline(void) {
     refresh();
 }
 
-static int start_x(char *entry_name) {
+static int start_x(const char *entry_name) {
     char *entry_config_path = NULL;
     int pid;
     int res = 1;
@@ -273,7 +273,12 @@ static int alloc_entry_buf(void) {
     return 0;
 }
 
-int nprompt(char *entry_name) {
+void setup_screen(void) {
+    win = initscr();
+    win->_scroll = true;
+}
+
+int nprompt(const char *entry_name) {
     struct sorted_entries sentries = {0};
     int res = 1;
 
@@ -287,11 +292,12 @@ int nprompt(char *entry_name) {
     if (alloc_entry_buf()) 
         return res;
 
-    win = initscr();
-    win->_scroll = true;
+    setup_screen();
 
     print_entry_menu(&sentries);
+
     res = nprompt_number();
+    
     killtimer();
     ncleanup();
 

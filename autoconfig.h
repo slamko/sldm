@@ -70,19 +70,19 @@
 #define LSTAT_FOLLOWS_SLASHED_SYMLINK 1
 
 /* Name of package */
-#define PACKAGE "sdm"
+#define PACKAGE "sldm"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT "vaceslavkozin619@gmail.com"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "sdm"
+#define PACKAGE_NAME "sldm"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "sdm VERSION"
+#define PACKAGE_STRING "sldm VERSION"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "sdm"
+#define PACKAGE_TARNAME "sldm"
 
 /* Define to the home page for this package. */
 #define PACKAGE_URL ""
