@@ -9,9 +9,9 @@
 #include <sys/stat.h>
 #include <ncurses.h>
 #include <errno.h>
-#include "command-names.h"
 #include "nentry-prompt.h"
 #include "config-names.h"
+#include "command-names.h"
 #include "utils.h"
 #include "log-utils.h"
 
