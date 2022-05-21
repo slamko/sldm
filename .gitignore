@@ -7,6 +7,7 @@ legacy/
 # http://www.gnu.org/software/automake
 
 Makefile.in
+/autotools-aux
 /ar-lib
 /mdate-sh
 /py-compile
