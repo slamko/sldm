@@ -2,7 +2,7 @@
 
 #define PROMPT_TIMEOUT 11              // in seconds
 
-#define DEFAULT_ENTRY 2                // count starts with 1
+#define DEFAULT_ENTRY 1                // count starts with 1
 
 // #define BASE_XCONFIG "~/.xinitrc"    // relative path is accepted
 
