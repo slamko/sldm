@@ -12,13 +12,14 @@ static char *home;
 static char *xinitrc;
 static char *config_dir;
 static char *sldm_config_dir;
+static char *sldm_config_entries;
 
 char *get_home(void) {
     if (!home)
-        home = getenv("HOME");
+        home = getenv(HOME);
 
     if (!home)
-        home = getenv("XDG_HOME");
+        home = getenv(XDG_HOME);
 
     if (!home)
        die("Can not find home directory");
@@ -36,7 +37,7 @@ char *home_path_append(const char *appends) {
 
 char *get_config_dir(void) {
     if (!config_dir)
-        config_dir = home_path_append(getenv("XDG_CONFIG"));
+        config_dir = home_path_append(getenv(XDG_CONFIG_HOME));
 
     if (!config_dir)
         config_dir = home_path_append(DEF_CONFIG_D);
@@ -93,18 +94,28 @@ char *get_xinitrc_l(void) {
 }
 
 char *get_sldm_config_dir(void) {
+    if (!sldm_config_dir) {
+        struct stat sb;
 
+        sldm_config_dir = config_dir_append(SLDM_CONFIG_D);
+
+        if (stat(sldm_config_dir, &sb) && !S_ISDIR(sb.st_mode)) {
+            mkdir(get_config_dir(), S_IRWXU);
+            mkdir(sldm_config_dir, S_IRWXU);
+        }
+    }
+
+    return sldm_config_dir;
 }
 
 char *get_sldm_config_entries(void) {
-    if (!sldm_config_dir) 
-        sldm_config_dir = home_path_append(SLDM_CONFIG_ENTRIES);
+    if (!sldm_config_entries) {
+        sldm_config_dir = sappend(get_sldm_config_dir(), SLDM_CONFIG_ENTRIES);
 
-    struct stat sb;
-    if (stat(sldm_config_dir, &sb) && !S_ISDIR(sb.st_mode)) {
-        char *dr = home_path_append(SLDM_CONFIG);
-        mkdir(dr, S_IRWXU);
-        mkdir(sldm_config_dir, S_IRWXU);
+        struct stat sb;
+        if (stat(sldm_config_entries, &sb) && !S_ISDIR(sb.st_mode)) {
+            mkdir(sldm_config_entries, S_IRWXU);
+        }
     }
 
     return sldm_config_dir;

@@ -129,7 +129,7 @@ int getdir_entries(struct sorted_entries *sentries) {
     struct dirent **eentries = NULL;
     int entrcount;
 
-    entrcount = scandir(get_sldm_config_dir(), &eentries, &is_regfile, &sort_entries);
+    entrcount = scandir(get_sldm_config_entries(), &eentries, &is_regfile, &sort_entries);
     if (entrcount == -1)
         return 1;
     

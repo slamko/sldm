@@ -1,11 +1,17 @@
 #ifndef CONFIG_NAMES
 #define CONFIG_NAMES
 
+// Config files
 #define XINITRC_ETC "/etc/X11/xinit/xinitrc"
 #define XINITRC_ETC_D "/etc/X11/xinit/xinitrc.d"
 #define DEF_CONFIG_D "/.config/"
 #define SLDM_CONFIG_D "/sldm/"
-#define SLDM_CONFIG_ENTRIES "/sldm/entries/"
+#define SLDM_CONFIG_ENTRIES "/entries/"
+
+// Config variables
+#define HOME "HOME"
+#define XDG_HOME "XDH_HOME"
+#define XDG_CONFIG_HOME "XDG_CONFIG_HOME"
 
 // Default config values
 #define XINITRC_L "~/.xinitrc"
