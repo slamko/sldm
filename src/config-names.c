@@ -10,46 +10,20 @@
 
 static char *home;
 static char *xinitrc;
+static char *config_dir;
 static char *sldm_config_dir;
 
 char *get_home(void) {
     if (!home)
-        home = getenv("HOME");        
-    
+        home = getenv("HOME");
+
+    if (!home)
+        home = getenv("XDG_HOME");
+
+    if (!home)
+       die("Can not find home directory");
+
     return home;
-}
-
-char *sappend(const char *base, const char *appends) {
-    if (!appends || !base)
-        return NULL;
-
-    const size_t len1 = strlen(base);
-    const size_t len2 = strlen(appends);
-    char *result = calloc(len1 + len2 + 1, sizeof(*result));
-
-    if (!result) 
-        fatal();
-
-    strncpy(result, base, len1 + 1);
-    strncat(result + len1, appends, len2 + 1);
-    return result;
-}
-
-char *slash_append(const char *base, const char *appends) {
-    if (!appends || !base)
-        return NULL;
-        
-    const size_t len1 = strlen(base);
-    const size_t len2 = strlen(appends);
-    char *result = calloc(len1 + len2 + 2, sizeof(*result));
-
-    if (!result) 
-        fatal();
-    
-    strncpy(result, base, len1 + 1);
-    result[len1] = '/';
-    strncat(result + len1 + 1, appends, len2 + 1);
-    return result;
 }
 
 char *home_path_append(const char *appends) {
@@ -60,6 +34,57 @@ char *home_path_append(const char *appends) {
     return sappend(home, appends);
 }
 
+char *get_config_dir(void) {
+    if (!config_dir)
+        config_dir = home_path_append(getenv("XDG_CONFIG"));
+
+    if (!config_dir)
+        config_dir = home_path_append(DEF_CONFIG_D);
+
+   return config_dir;
+}
+
+char *config_dir_append(const char *appends) {
+    if (!appends)
+        return NULL;
+
+    const char *config = get_config_dir();
+    return sappend(config, appends);
+}
+
+char *sappend(const char *base, const char *appends) {
+    if (!appends || !base)
+        return NULL;
+
+    const size_t len1 = strlen(base);
+    const size_t len2 = strlen(appends);
+    char *result = calloc(len1 + len2 + 1, sizeof(*result));
+
+    if (!result)
+        fatal();
+
+    strncpy(result, base, len1 + 1);
+    strncat(result + len1, appends, len2 + 1);
+    return result;
+}
+
+char *slash_append(const char *base, const char *appends) {
+    if (!appends || !base)
+        return NULL;
+
+    const size_t len1 = strlen(base);
+    const size_t len2 = strlen(appends);
+    char *result = calloc(len1 + len2 + 2, sizeof(*result));
+
+    if (!result)
+        fatal();
+
+    strncpy(result, base, len1 + 1);
+    result[len1] = '/';
+    strncat(result + len1 + 1, appends, len2 + 1);
+    return result;
+}
+
 char *get_xinitrc_l(void) {
     if (!xinitrc) 
         xinitrc = home_path_append(XINITRC_L);
@@ -68,6 +93,10 @@ char *get_xinitrc_l(void) {
 }
 
 char *get_sldm_config_dir(void) {
+
+}
+
+char *get_sldm_config_entries(void) {
     if (!sldm_config_dir) 
         sldm_config_dir = home_path_append(SLDM_CONFIG_ENTRIES);
 
@@ -85,7 +114,7 @@ char *sldm_config_append(const char *appends) {
     if (!appends)
         return NULL;
 
-    return sappend(get_sldm_config_dir(), appends);
+    return sappend(get_sldm_config_entries(), appends);
 }
 
 char *get_xconfig(void) {
