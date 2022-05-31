@@ -18,7 +18,7 @@
 #define _DEFAULT_ENTRY 1
 #define _PROMPT_TIMEOUT -1
 
-#include "nentry-prompt.h"
+#include "utils.h"
 
 extern int prompt_timeout;
 extern entryid default_entry;

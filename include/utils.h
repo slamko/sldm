@@ -1,5 +1,16 @@
+
+#ifndef SLDM_UTILS_F
+#define SLDM_UTILS_F
+
 #include <dirent.h>
 #include "command-names.h"
+
+typedef unsigned long entryid;
+
+struct sorted_entries {
+    struct dirent **sentries;
+    int entrycnt;
+};
 
 int entry_invalid(const char *new_entry);
 
@@ -20,3 +31,5 @@ void destroy_dentries_iterator(struct sorted_entries *sentries);
 struct dirent *iter_entry(struct sorted_entries *sentries);
 
 int getdir_entries(struct sorted_entries *sentries);
+
+#endif

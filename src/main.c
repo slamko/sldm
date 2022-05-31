@@ -192,20 +192,22 @@ int show_entry(const char *entry_name) {
 
     if (stat(show_entry_path, &entry_st) == -1) {
         perror(ERR_PREF);
-        goto cleanup;
+        goto cleanup_efp;
     }
 
     entrybuf = calloc(entry_st.st_size, sizeof(*entrybuf));
     if (!entrybuf) {
         perror(ERR_PREF);
-        goto cleanup;
+        goto cleanup_ebuf;
     }
 
     fread(entrybuf, sizeof(*entrybuf), entry_st.st_size, entryfp);        
     res = write(STDOUT_FILENO, entrybuf, entry_st.st_size) != -1;
     fputc('\n', stdout);
 
-cleanup:
+cleanup_ebuf:
+    free(entrybuf);
+cleanup_efp:
     fclose(entryfp);
 cleanup_entryp:
     free(show_entry_path);

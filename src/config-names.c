@@ -110,7 +110,7 @@ char *get_sldm_config_dir(void) {
 
 char *get_sldm_config_entries(void) {
     if (!sldm_config_entries) {
-        sldm_config_dir = sappend(get_sldm_config_dir(), SLDM_CONFIG_ENTRIES);
+        sldm_config_entries = sappend(get_sldm_config_dir(), SLDM_CONFIG_ENTRIES);
 
         struct stat sb;
         if (stat(sldm_config_entries, &sb) && !S_ISDIR(sb.st_mode)) {
@@ -118,7 +118,7 @@ char *get_sldm_config_entries(void) {
         }
     }
 
-    return sldm_config_dir;
+    return sldm_config_entries;
 }
 
 char *sldm_config_append(const char *appends) {
@@ -133,9 +133,8 @@ char *get_xconfig(void) {
 }
 
 void cleanup_names(void) {
-    if (xinitrc)
-        free(xinitrc);
-    
-    if (sldm_config_dir)
-        free(sldm_config_dir);
+    free(xinitrc);
+    free(config_dir);
+    free(sldm_config_dir);
+    free(sldm_config_entries);
 }
