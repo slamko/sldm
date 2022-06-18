@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <string.h>
@@ -13,8 +14,8 @@
 #include "log-utils.h"
 #include "utils.h"
 
-#define ENTRY_PROMPT "\rProvide an entry name or number (%s): "
-#define ENTRY_PROMPT_DEFAULT "\rProvide an entry name or number (timeout: %ds): "
+#define ENTRY_PROMPT "Provide an entry name or number (%s): "
+#define ENTRY_PROMPT_DEFAULT "Provide an entry name or number (timeout: %ds): "
 #define INITIMER_PID -1
 #define READ_USR_ENTRY 1
 
@@ -25,6 +26,22 @@ int timer_pid = INITIMER_PID;
 char **entry_table_buf;
 char *bufval;
 WINDOW *win;
+int y_line = 1;
+
+void printw_indent(int indentx, bool indenty, const char *msg, ...) {
+	va_list val;
+	if (indenty)
+		y_line++;
+
+	va_start(val, msg);
+	move(y_line, indentx);
+    vw_printw(win, msg, val);
+	va_end(val);
+}
+
+void printw_entry(WINDOW *win, const char *entry_name, const entryid entrid) {
+    printw_indent(1, true,  "(%lu) %s\n", entrid, entry_name);
+}
 
 static void entry_table_buf_dealloc(void) {
     if (!entry_table_buf)
@@ -62,8 +79,9 @@ static int distillstr(char *str) {
 }
 
 static void clean_nline(void) {
-    wdeleteln(win);
-    refresh();
+	move(y_line, 1);
+	clrtoeol();
+	refresh();
 }
 
 static int start_x(const char *entry_name) {
@@ -180,7 +198,7 @@ static int handle_entrynum(void) {
             if (selected_entry == 0) {
                 return 0;
             } else if (selected_entry > entry_count) {
-                printw(ENTRY_PROMPT, "Invalid entry number");
+                printw_indent(1, false, ENTRY_PROMPT, "Invalid entry number");
             } else if (selected_entry > 0) {
                 return start_x(entry_table_buf[selected_entry - 1]);
             }
@@ -198,12 +216,12 @@ static int handle_entrynum(void) {
 
             switch (name_matches) {
             case 0:
-                printw(ENTRY_PROMPT, "Invalid entry name");
+                printw_indent(1, false, ENTRY_PROMPT, "Invalid entry name");
                 break;
             case 1:
                 return start_x(entry_table_buf[match_id]);
             default:
-                printw(ENTRY_PROMPT, "Disambiguous between multiple entry names");
+                printw_indent(1, false, ENTRY_PROMPT, "Disambiguous between multiple entry names");
                 break;
             }
         }
@@ -221,11 +239,11 @@ static int handle_entrynum(void) {
 static int nprompt_number() {
     clean_nline();
     if (prompt_timeout > 0) {
-        printw(ENTRY_PROMPT_DEFAULT, prompt_timeout);
+        printw_indent(1, false, ENTRY_PROMPT_DEFAULT, prompt_timeout);
         refresh();
         timer_pid = fork();
     } else { 
-        printw(ENTRY_PROMPT, "no timeout");
+        printw_indent(1, false, ENTRY_PROMPT, "no timeout");
         refresh();
     }
 
@@ -240,16 +258,20 @@ static int nprompt_number() {
 static void print_entry_menu(struct sorted_entries *sentries) {
     struct dirent *centry = NULL;
 
-    printw("Choose an entry (default: %lu):\n", default_entry);
+    printw_indent(1, true, "Choose an entry (default: %lu):", default_entry);
+	
     for (entryid eid = 1; (centry = iter_entry(sentries)); eid++) {
         strncpy(entry_table_buf[eid - 1], centry->d_name, ENTRY_NAME_BUF_SIZE);
         entry_table_buf[eid - 1][ENTRY_NAME_BUF_SIZE - 1] = '\0';
-        printw_entry(centry->d_name, eid);
+        printw_entry(win, centry->d_name, eid);
         free(centry);
     }
 
     destroy_dentries_iterator(sentries);
-    printw(NN("(0) Exit"));
+	
+	printw_indent(1, true, "\n");
+    printw_indent(1, true, "(0) Exit\n");
+	printw_indent(1, true, "\n");
     refresh();
 }
 
@@ -276,8 +298,8 @@ static int alloc_entry_buf(void) {
 void setup_screen(void) {
     win = initscr();
     win->_scroll = true;
+	cbreak();
 	box(win, 0, 0);
-	mvwprintw(win, 1, 1, "");
 }
 
 int nprompt(const char *entry_name) {

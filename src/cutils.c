@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <time.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -103,10 +104,6 @@ int sort_entries(const struct dirent **entry, const struct dirent **next) {
 
 void printf_entry(const char *entry_name, const entryid entrid) {
     printf("(%lu) %s\n", entrid, entry_name);
-}
-
-void printw_entry(const char *entry_name, const entryid entrid) {
-    printw("(%lu) %s\n", entrid, entry_name);
 }
 
 void destroy_dentries_iterator(struct sorted_entries *sentries) {
