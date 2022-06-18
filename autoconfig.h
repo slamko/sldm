@@ -11,7 +11,7 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the `ncurses' library (-lncurses). */
-/* #undef HAVE_LIBNCURSES */
+#define HAVE_LIBNCURSES 1
 
 /* Define to 1 if your system has a GNU libc compatible `malloc' function, and
    to 0 otherwise. */

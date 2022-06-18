@@ -108,7 +108,7 @@ static void force_runx() {
     sleep(1);
 
     if (default_entry > entry_count || default_entry <= 0) {
-        nerror("Invalid default entry (%d)", default_entry);
+        nerror("Invalid default entry (%lu)", default_entry);
         goto cleanup;
     }
 
@@ -135,7 +135,7 @@ static void run_prompt_timer(void) {
         sleep(1);
 
     printw(NN("Timeout expired"));
-    printw("Using default entry (%d)\n\n", default_entry);
+    printw("Using default entry (%lu)\n\n", default_entry);
     refresh();
     kill(getppid(), SIGUSR1);
     exit(0);
@@ -240,7 +240,7 @@ static int nprompt_number() {
 static void print_entry_menu(struct sorted_entries *sentries) {
     struct dirent *centry = NULL;
 
-    printw("Choose an entry (default: %d):\n", default_entry);
+    printw("Choose an entry (default: %lu):\n", default_entry);
     for (entryid eid = 1; (centry = iter_entry(sentries)); eid++) {
         strncpy(entry_table_buf[eid - 1], centry->d_name, ENTRY_NAME_BUF_SIZE);
         entry_table_buf[eid - 1][ENTRY_NAME_BUF_SIZE - 1] = '\0';
@@ -276,6 +276,8 @@ static int alloc_entry_buf(void) {
 void setup_screen(void) {
     win = initscr();
     win->_scroll = true;
+	box(win, 0, 0);
+	mvwprintw(win, 1, 1, "");
 }
 
 int nprompt(const char *entry_name) {
