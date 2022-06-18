@@ -25,10 +25,6 @@ int sort_entries(const struct dirent **entry, const struct dirent **next);
 
 void printf_entry(const char *entry_name, const entryid entrid);
 
-void printw_intend(WINDOW *win, int intend, const char *msg, ...);
-
-void printw_entry(WINDOW *win, const char *entry_name, const entryid entrid);
-
 void destroy_dentries_iterator(struct sorted_entries *sentries);
 
 struct dirent *iter_entry(struct sorted_entries *sentries);

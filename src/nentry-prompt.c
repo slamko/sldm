@@ -30,17 +30,28 @@ int y_line = 1;
 
 void printw_indent(int indentx, bool indenty, const char *msg, ...) {
 	va_list val;
-	if (indenty)
-		y_line++;
 
 	va_start(val, msg);
 	move(y_line, indentx);
     vw_printw(win, msg, val);
-	va_end(val);
+
+    if (indenty)
+		y_line++;
+
+    va_end(val);
 }
 
-void printw_entry(WINDOW *win, const char *entry_name, const entryid entrid) {
+void printw_entry(const char *entry_name, const entryid entrid) {
     printw_indent(1, true,  "(%lu) %s\n", entrid, entry_name);
+}
+
+#define NEW_LINE() printw_indent(1, true, "\n")
+
+void printw_indent_next_line(const char *msg, ...) {
+	va_list val;
+	va_start(val, msg);
+	printw_indent(1, true, msg, val);
+	va_end(val);
 }
 
 static void entry_table_buf_dealloc(void) {
@@ -101,7 +112,10 @@ static int start_x(const char *entry_name) {
         return res;
     }
 
-    printw("\n\n\n\nRunning %s ...", entry_name);
+	NEW_LINE();
+	NEW_LINE();
+	NEW_LINE();
+    printw_indent_next_line("Running %s ...", entry_name);
 
     pid = fork();
     if (pid == -1) {
@@ -152,8 +166,12 @@ static void run_prompt_timer(void) {
     for (int i = prompt_timeout + 1; i > 0; i--)
         sleep(1);
 
-    printw(NN("Timeout expired"));
-    printw("Using default entry (%lu)\n\n", default_entry);
+	NEW_LINE();
+    printw_indent_next_line("Timeout expired");
+	NEW_LINE();
+    printw_indent_next_line("Using default entry (%lu)\n", default_entry);
+	NEW_LINE();
+	
     refresh();
     kill(getppid(), SIGUSR1);
     exit(0);
@@ -258,20 +276,21 @@ static int nprompt_number() {
 static void print_entry_menu(struct sorted_entries *sentries) {
     struct dirent *centry = NULL;
 
-    printw_indent(1, true, "Choose an entry (default: %lu):", default_entry);
+    printw_indent_next_line("Choose an entry (default: %lu):", default_entry);
 	
     for (entryid eid = 1; (centry = iter_entry(sentries)); eid++) {
         strncpy(entry_table_buf[eid - 1], centry->d_name, ENTRY_NAME_BUF_SIZE);
         entry_table_buf[eid - 1][ENTRY_NAME_BUF_SIZE - 1] = '\0';
-        printw_entry(win, centry->d_name, eid);
+        printw_entry(centry->d_name, eid);
         free(centry);
     }
 
     destroy_dentries_iterator(sentries);
+
+	NEW_LINE();
+    printw_indent_next_line("(0) Exit\n");
+	NEW_LINE();
 	
-	printw_indent(1, true, "\n");
-    printw_indent(1, true, "(0) Exit\n");
-	printw_indent(1, true, "\n");
     refresh();
 }
 
