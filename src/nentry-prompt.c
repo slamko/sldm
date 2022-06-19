@@ -17,49 +17,17 @@
 
 #define ENTRY_PROMPT "Provide an entry name or number (%s): "
 #define ENTRY_PROMPT_DEFAULT "Provide an entry name or number (timeout: %ds): "
-#define INITIMER_PID -1
-#define READ_USR_ENTRY 1
 
-#define NN(S) "\n"S"\n"
+static const pid_t INITIMER_PID = -1;
+static const int READ_USR_ENTRY = 1;
 
-entryid entry_count = 0;
-int timer_pid = INITIMER_PID;
-char **entry_table_buf;
-char *bufval;
+static entryid entry_count = 0;
+static pid_t timer_pid = INITIMER_PID;
+static char *bufval;
+
 WINDOW *win;
+char **entry_table_buf;
 int y_line = 1;
-
-void printw_indent(int indentx, bool indenty, const char *msg, ...) {
-	va_list val;
-
-	va_start(val, msg);
-	move(y_line, indentx);
-    vw_printw(win, msg, val);
-
-    if (indenty)
-		y_line++;
-
-    va_end(val);
-}
-
-void vprintw_indent(int indentx, int indenty, const char *msg, va_list val) {
-	move(y_line, indentx);
-    vw_printw(win, msg, val);
-	y_line += indenty;
-}
-
-void printw_entry(const char *entry_name, const entryid entrid) {
-    printw_indent(1, true,  "(%lu) %s\n", entrid, entry_name);
-}
-
-#define NEW_LINE() printw_indent(1, true, "\n")
-
-void printw_indent_next_line(const char *msg, ...) {
-	va_list val;
-	va_start(val, msg);
-	vprintw_indent(1, true, msg, val);
-	va_end(val);
-}
 
 static void entry_table_buf_dealloc(void) {
     if (!entry_table_buf)
@@ -104,7 +72,7 @@ static void clean_nline(void) {
 
 static int start_x(const char *entry_name) {
     char *entry_config_path = NULL;
-    int pid;
+    pid_t pid;
     int res = 1;
 
     killtimer();
@@ -223,7 +191,7 @@ static int handle_entrynum(void) {
             if (selected_entry == 0) {
                 return 0;
             } else if (selected_entry > entry_count) {
-                printw_indent(1, false, ENTRY_PROMPT, "Invalid entry number");
+                printw_indent(0, 1, ENTRY_PROMPT, "Invalid entry number");
             } else if (selected_entry > 0) {
                 return start_x(entry_table_buf[selected_entry - 1]);
             }
@@ -241,12 +209,12 @@ static int handle_entrynum(void) {
 
             switch (name_matches) {
             case 0:
-                printw_indent(1, false, ENTRY_PROMPT, "Invalid entry name");
+                printw_indent(0, 1, ENTRY_PROMPT, "Invalid entry name");
                 break;
             case 1:
                 return start_x(entry_table_buf[match_id]);
             default:
-                printw_indent(1, false, ENTRY_PROMPT, "Disambiguous between multiple entry names");
+                printw_indent(0, 1, ENTRY_PROMPT, "Disambiguous between multiple entry names");
                 break;
             }
         }
@@ -264,11 +232,11 @@ static int handle_entrynum(void) {
 static int nprompt_number() {
     clean_nline();
     if (prompt_timeout > 0) {
-        printw_indent(1, false, ENTRY_PROMPT_DEFAULT, prompt_timeout);
+        printw_indent(0, 1, ENTRY_PROMPT_DEFAULT, prompt_timeout);
         refresh();
         timer_pid = fork();
     } else { 
-        printw_indent(1, false, ENTRY_PROMPT, "no timeout");
+        printw_indent(0, 1, ENTRY_PROMPT, "no timeout");
         refresh();
     }
 
@@ -343,7 +311,6 @@ int nprompt(const char *entry_name) {
         return res;
 
     setup_screen();
-	printw_indent_next_line("default: %d", default_entry);
 
     print_entry_menu(&sentries);
 

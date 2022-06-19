@@ -23,6 +23,16 @@ int is_regfile(const struct dirent *finfo);
 
 int sort_entries(const struct dirent **entry, const struct dirent **next);
 
+void printw_indent(int indenty, int indentx, const char *msg, ...);
+
+void vprintw_indent(int indenty, int indentx, const char *msg, va_list val);
+
+void printw_entry(const char *entry_name, const entryid entrid);
+
+#define NEW_LINE() printw_indent(1, true, "\n")
+
+void printw_indent_next_line(const char *msg, ...);
+
 void printf_entry(const char *entry_name, const entryid entrid);
 
 void destroy_dentries_iterator(struct sorted_entries *sentries);

@@ -102,6 +102,34 @@ int sort_entries(const struct dirent **entry, const struct dirent **next) {
     return (int)difftime(snext.st_ctim.tv_sec, sentry.st_mtim.tv_sec);
 }
 
+void printw_indent(int indenty, int indentx, const char *msg, ...) {
+	va_list val;
+
+	va_start(val, msg);
+	move(y_line, indentx);
+    vw_printw(win, msg, val);
+
+	y_line += indenty;
+    va_end(val);
+}
+
+void vprintw_indent(int indenty, int indentx, const char *msg, va_list val) {
+	move(y_line, indentx);
+    vw_printw(win, msg, val);
+	y_line += indenty;
+}
+
+void printw_entry(const char *entry_name, const entryid entrid) {
+    printw_indent(1, 1,  "(%lu) %s\n", entrid, entry_name);
+}
+
+void printw_indent_next_line(const char *msg, ...) {
+	va_list val;
+	va_start(val, msg);
+	vprintw_indent(1, 1, msg, val);
+	va_end(val);
+}
+
 void printf_entry(const char *entry_name, const entryid entrid) {
     printf("(%lu) %s\n", entrid, entry_name);
 }
