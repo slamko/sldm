@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -41,6 +42,12 @@ void printw_indent(int indentx, bool indenty, const char *msg, ...) {
     va_end(val);
 }
 
+void vprintw_indent(int indentx, int indenty, const char *msg, va_list val) {
+	move(y_line, indentx);
+    vw_printw(win, msg, val);
+	y_line += indenty;
+}
+
 void printw_entry(const char *entry_name, const entryid entrid) {
     printw_indent(1, true,  "(%lu) %s\n", entrid, entry_name);
 }
@@ -50,7 +57,7 @@ void printw_entry(const char *entry_name, const entryid entrid) {
 void printw_indent_next_line(const char *msg, ...) {
 	va_list val;
 	va_start(val, msg);
-	printw_indent(1, true, msg, val);
+	vprintw_indent(1, true, msg, val);
 	va_end(val);
 }
 
@@ -59,8 +66,8 @@ static void entry_table_buf_dealloc(void) {
         return;
 
     free(bufval);
-    bufval = NULL;
     free(entry_table_buf);
+    bufval = NULL;
     entry_table_buf = NULL;
 }
 
@@ -336,6 +343,7 @@ int nprompt(const char *entry_name) {
         return res;
 
     setup_screen();
+	printw_indent_next_line("default: %d", default_entry);
 
     print_entry_menu(&sentries);
 
