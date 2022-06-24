@@ -61,7 +61,7 @@ static int parse_args(int argc, char **argv, struct args *args) {
     char *target = NULL;
     args->target = PROMPT;
     args->entry_name = NULL;
-
+    
     if (argc >= 2){
         if (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")) {
             print_usage();

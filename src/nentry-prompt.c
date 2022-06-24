@@ -253,7 +253,9 @@ static void print_entry_menu(struct sorted_entries *sentries) {
 
     printw_indent_next_line("Choose an entry (default: %lu):", default_entry);
 	
-    for (entryid eid = 1; (centry = iter_entry(sentries)); eid++) {
+    for (entryid eid = 1;
+		 (centry = iter_entry(sentries));
+		 eid++) {
         strncpy(entry_table_buf[eid - 1], centry->d_name, ENTRY_NAME_BUF_SIZE);
         entry_table_buf[eid - 1][ENTRY_NAME_BUF_SIZE - 1] = '\0';
         printw_entry(centry->d_name, eid);
