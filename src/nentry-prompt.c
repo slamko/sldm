@@ -17,6 +17,7 @@
 
 #define ENTRY_PROMPT "Provide an entry name or number (%s): "
 #define ENTRY_PROMPT_DEFAULT "Provide an entry name or number (timeout: %ds): "
+#define ERR_NO_ENTRY "No entry found with a given name."
 
 static const pid_t INITIMER_PID = -1;
 static const int READ_USR_ENTRY = 1;
@@ -82,7 +83,12 @@ static int start_x(const char *entry_name) {
         return res;
 
     if (access(entry_config_path, R_OK)) {
-        nerror("No entry found with a given name\n");
+        if (win) {
+			nerror(ERR_NO_ENTRY);
+		} else {
+			err_noentry_found(entry_name);
+		}
+			
         goto cleanup;
         return res;
     }

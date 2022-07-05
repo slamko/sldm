@@ -30,7 +30,7 @@ int not_in_tty(void) {
         perror(ERR_PREF);
     }
 
-    return (cmp - cmp);
+    return cmp;
 } 
 
 int partialcmp(const char *entry, const char *cmp) {

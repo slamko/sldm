@@ -37,7 +37,7 @@ void nerror(const char* err_format, ...) {
 }
 
 void error_not_in_tty(void) {
-    error("Only console users are allowed to run the X server");
+    error("Only console users are allowed to run the X server.");
 }
 
 void error_invalid_entry(void) {
