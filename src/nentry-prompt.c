@@ -156,11 +156,14 @@ static void read_user_entry(char *read_buf, size_t readbuf_siz) {
     int ch;
 
     ch = getch();
-    for (size_t i = 0; i < readbuf_siz - 1; ch = getch()) {
+    for (long long i = 0; i < readbuf_siz - 1; ch = getch()) {
 		if (ch == KEY_BACKSPACE || ch == KEY_DC || ch == 127) {
-			read_buf[i] = '\0';
-			i--;
-			printw("\b \b");
+			if (i > 0) {
+				i--;
+				read_buf[i + 1] = '\0';
+				read_buf[i] = '\0';
+				printw("\b \b");
+			}
 			continue;
 		}
 
