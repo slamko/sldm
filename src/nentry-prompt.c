@@ -153,19 +153,27 @@ static void run_prompt_timer(void) {
 }
 
 static void read_user_entry(char *read_buf, size_t readbuf_siz) {
-    char ch;
+    int ch;
 
     ch = getch();
-    for (size_t i = 0; i < readbuf_siz - 1; i++) {
-        if (ch == '\n') {
+    for (size_t i = 0; i < readbuf_siz - 1; ch = getch()) {
+		if (ch == KEY_BACKSPACE || ch == KEY_DC || ch == 127) {
+			read_buf[i] = '\0';
+			i--;
+			printw("\b \b");
+			continue;
+		}
+
+		if (ch == '\n') {
             read_buf[i] = ch;
             break;
         } else if (ch != '\n' && ch != EOF) {
+			printw("%c", ch);
             read_buf[i] = ch;
-            ch = getch();
         } else {
             break;
         }
+		i++;
     }
 }
 
@@ -229,7 +237,7 @@ static int handle_entrynum(void) {
     }
 }
 
-static int nprompt_number() {
+static int nprompt_number(void) {
     clean_nline();
     if (prompt_timeout > 0) {
         printw_indent(0, 1, ENTRY_PROMPT_DEFAULT, prompt_timeout);
@@ -296,6 +304,7 @@ void setup_screen(void) {
     win->_scroll = true;
 	cbreak();
 	box(win, 0, 0);
+	noecho();
 }
 
 int nprompt(const char *entry_name) {

@@ -18,6 +18,8 @@ Makefile.in
 /ylwrap
 .deps/
 .dirstamp
+*.zip
+*tar.gz
 
 # http://www.gnu.org/software/autoconf
 
