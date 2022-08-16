@@ -16,6 +16,31 @@
 
 char *add_entry_command = NULL;
 
+static int print_entry(const char *entryp, FILE *entryf) {
+    struct stat entry_st;
+    char *entrybuf = NULL;
+    int res = 1;
+    
+    if (stat(entryp, &entry_st) == -1) {
+        perror(ERR_PREF);
+        return res;
+    }
+
+    entrybuf = calloc(entry_st.st_size, sizeof(*entrybuf));
+    if (!entrybuf) {
+        perror(ERR_PREF);
+        goto cleanup_ebuf;
+    }
+
+    fread(entrybuf, sizeof(*entrybuf), entry_st.st_size, entryf);        
+    res = write(STDOUT_FILENO, entrybuf, entry_st.st_size) != -1;
+    fputc('\n', stdout);
+
+cleanup_ebuf:
+    free(entrybuf);
+    return res;
+}
+
 static int write_exec_command(FILE *fp) {
     char *exec_line = NULL;
     int addcmd_len = strnlen(add_entry_command, ENTRY_CMD_BUF_LEN);
@@ -39,20 +64,12 @@ static int write_exec_command(FILE *fp) {
     return 0;
 }
 
-static int copy_base_config(char *new_entry_path) {
+static int copy_base_config(FILE *fentry) {
     FILE *xinitrc = NULL;
-    FILE *new_entry = NULL;
     char xconfig_ch;
-    int res = 1;
+    int res = 0;
 
     if (!get_xconfig() || access(get_xconfig(), R_OK)) {
-        new_entry = fopen(new_entry_path, "w");
-        if (!new_entry)
-            return res;
-
-        res = write_exec_command(new_entry);
-
-        fclose(new_entry);
         return res;
     }
 
@@ -61,18 +78,13 @@ static int copy_base_config(char *new_entry_path) {
         return res;
     }
 
-    new_entry = fopen(new_entry_path, "w");
-    if (!new_entry) {
-        goto close_xinitrc;
-    }
-
     while ((xconfig_ch = fgetc(xinitrc)) != EOF) {
-        fputc(xconfig_ch, new_entry);
+        if (fputc(xconfig_ch, fentry) == EOF) {
+            goto close_xinitrc;
+        }
     }
+    printf("Copying .xinitrc file from HOME firectory.\n\n");
     
-    res = write_exec_command(new_entry);
-
-    fclose(new_entry);
 close_xinitrc:
     fclose(xinitrc);
     return res;
@@ -81,7 +93,8 @@ close_xinitrc:
 int add_entry(const char *new_entry) {
     char *new_entry_path = NULL;
     int res = 1;
-
+    FILE *new_entryf = NULL;
+    
     if (entry_invalid(new_entry)) { 
         error_invalid_entry();
         return res;
@@ -97,11 +110,30 @@ int add_entry(const char *new_entry) {
         return res;
     }
     
-    res = copy_base_config(new_entry_path);
-    if (!res) 
+    new_entryf = fopen(new_entry_path, "w");
+    if (copy_base_config(new_entryf)) {
+        perror(ERR_PREF);
+        goto cleanup;
+    }
+
+    if ((res = write_exec_command(new_entryf))) {
+        perror(ERR_PREF);
+        goto cleanup;
+    }
+    
+    new_entryf = freopen(new_entry_path, "r", new_entryf);
+    if (new_entryf) {
+        puts("***");
+        print_entry(new_entry_path, new_entryf);
+        puts("***\n");
+    }
+    
+    if (res == 0) 
         printf("Added new entry with name '%s'\n", new_entry);
 
+  cleanup:    
     free(new_entry_path);
+    fclose(new_entryf);
     return res;
 }
 
@@ -187,29 +219,13 @@ int show_entry(const char *entry_name) {
             perror(ERR_PREF);
         }
         
-        goto cleanup_entryp;
+        goto cleanup;
     }
 
-    if (stat(show_entry_path, &entry_st) == -1) {
-        perror(ERR_PREF);
-        goto cleanup_efp;
-    }
-
-    entrybuf = calloc(entry_st.st_size, sizeof(*entrybuf));
-    if (!entrybuf) {
-        perror(ERR_PREF);
-        goto cleanup_ebuf;
-    }
-
-    fread(entrybuf, sizeof(*entrybuf), entry_st.st_size, entryfp);        
-    res = write(STDOUT_FILENO, entrybuf, entry_st.st_size) != -1;
-    fputc('\n', stdout);
-
-cleanup_ebuf:
-    free(entrybuf);
-cleanup_efp:
+    res = print_entry(show_entry_path, entryfp);
+    
+cleanup:
     fclose(entryfp);
-cleanup_entryp:
     free(show_entry_path);
     return res;
 }
