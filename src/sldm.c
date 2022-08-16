@@ -142,21 +142,15 @@ static int check_prompt_config() {
 static int check_xconfig() {
     wordexp_t exp_result;
 
-    #ifdef CONFIG_UNDEFINED
-    base_xconfig = XINITRC_L;
-    #endif
+    if (!base_xconfig) {
+        return 0;
+    }
     wordexp(base_xconfig, &exp_result, 0);
 
     if (access(exp_result.we_wordv[0], R_OK)){
-        #ifndef CONFIG_UNDEFINED
         error("Unable to acces xinitrc at path %s", exp_result.we_wordv[0]);
         wordfree(&exp_result);
         return EXIT_FAILURE;
-        #else
-        base_xconfig = NULL;
-        wordfree(&exp_result);
-        return EXIT_SUCCESS;
-        #endif
     }
 
     base_xconfig = strdup(exp_result.we_wordv[0]);
