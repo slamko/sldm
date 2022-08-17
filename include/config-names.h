@@ -15,6 +15,7 @@
 
 // Default config values
 #define XINITRC_L "~/.xinitrc"
+#define XPROFILE_L "~/.xprofile"
 #define _DEFAULT_ENTRY 1
 #define _PROMPT_TIMEOUT -1
 
@@ -33,6 +34,8 @@ char *sldm_config_append(const char *appends);
 char *get_home(void);
 
 char *get_xconfig(void);
+
+char *get_xprofile(void);
 
 char *get_sldm_config_entries(void);
 

@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <ncurses.h>
 #include <errno.h>
+#include <wordexp.h>
 #include "nentry-prompt.h"
 #include "config-names.h"
 #include "command-names.h"
@@ -162,3 +163,22 @@ int getdir_entries(struct sorted_entries *sentries) {
     sentries->entrycnt = entrcount;
     return 0;
 }
+
+int check_xconfig(char **xconfig) {
+    wordexp_t exp_result;
+
+    if (!*xconfig) {
+        return 0;
+    }
+    wordexp(*xconfig, &exp_result, 0);
+
+    if (access(exp_result.we_wordv[0], R_OK)){
+        wordfree(&exp_result);
+        return EXIT_FAILURE;
+    }
+
+    *xconfig = strdup(exp_result.we_wordv[0]);
+    wordfree(&exp_result);
+    return !*xconfig;
+}
+

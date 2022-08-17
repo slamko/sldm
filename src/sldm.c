@@ -139,25 +139,6 @@ static int check_prompt_config() {
     return EXIT_SUCCESS;
 }
 
-static int check_xconfig() {
-    wordexp_t exp_result;
-
-    if (!base_xconfig) {
-        return 0;
-    }
-    wordexp(base_xconfig, &exp_result, 0);
-
-    if (access(exp_result.we_wordv[0], R_OK)){
-        error("Unable to acces xinitrc at path %s", exp_result.we_wordv[0]);
-        wordfree(&exp_result);
-        return EXIT_FAILURE;
-    }
-
-    base_xconfig = strdup(exp_result.we_wordv[0]);
-    wordfree(&exp_result);
-    return !base_xconfig;
-}
-
 static void clean(struct args *arg) {
     cleanup_names();
     if (base_xconfig) {
@@ -178,8 +159,10 @@ int main(int argc, char** argv) {
     switch (args->target)
     {
     case ADD_ENTRY:
-        if (check_xconfig())
+        if (check_xconfig(&base_xconfig)) {
+            error("Unable to acces .xinitrc at path %s", base_xconfig); 
             goto cleanup;
+        }
 
         res = add_entry(args->entry_name);
         break;
@@ -208,3 +191,4 @@ cleanup:
     clean(args);
     return res;
 }
+

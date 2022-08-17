@@ -10,6 +10,7 @@
 
 static char *home;
 static char *xinitrc;
+static char *xprofile;
 static char *config_dir;
 static char *sldm_config_dir;
 static char *sldm_config_entries;
@@ -91,6 +92,13 @@ char *get_xinitrc_l(void) {
         xinitrc = home_path_append(XINITRC_L);
 
     return xinitrc;
+}
+
+char *get_xprofile(void) {
+    if (!xprofile) 
+        xprofile = home_path_append(XPROFILE_L);
+
+    return xprofile;
 }
 
 char *get_sldm_config_dir(void) {

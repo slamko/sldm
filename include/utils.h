@@ -41,4 +41,6 @@ struct dirent *iter_entry(struct sorted_entries *sentries);
 
 int getdir_entries(struct sorted_entries *sentries);
 
+int check_xconfig(char **xconfig);
+
 #endif

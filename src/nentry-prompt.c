@@ -71,12 +71,39 @@ static void clean_nline(void) {
 	refresh();
 }
 
+static int source_xprofile(void) {
+    int res = 1;
+    char *xprofile_p = get_xprofile();
+
+    if (!xprofile_p) {
+        return res;
+    }
+
+    if (access(xprofile_p, R_OK)) {
+        return res;
+    }
+    
+    if (fork() == 0) {   
+        if (system(NULL)) {
+            return system(xprofile_p);
+        }
+    }
+        
+    return res;
+}
+
 static int start_x(const char *entry_name) {
     char *entry_config_path = NULL;
     pid_t pid;
     int res = 1;
 
     killtimer();
+    if (source_xprofile()) {
+        NEW_LINE();
+        NEW_LINE();
+        printw_indent_next_line("warning: Loading .xprofile failed");
+    }
+    
     entry_config_path = sldm_config_append(entry_name);
 
     if (!entry_config_path)
