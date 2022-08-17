@@ -83,10 +83,8 @@ static int source_xprofile(void) {
         return res;
     }
     
-    if (fork() == 0) {   
-        if (system(NULL)) {
-            return system(xprofile_p);
-        }
+    if (system(NULL)) {
+        return system(xprofile_p);
     }
         
     return res;
@@ -98,10 +96,13 @@ static int start_x(const char *entry_name) {
     int res = 1;
 
     killtimer();
-    if (source_xprofile()) {
+    source_xprofile(); {
         NEW_LINE();
         NEW_LINE();
-        printw_indent_next_line("warning: Loading .xprofile failed");
+        
+        printw_indent(1, 1, "warning: Loading .xprofile failed");
+        refresh();
+        sleep(1);
     }
     
     entry_config_path = sldm_config_append(entry_name);
@@ -124,6 +125,7 @@ static int start_x(const char *entry_name) {
 	NEW_LINE();
 	NEW_LINE();
     printw_indent_next_line("Running %s ...", entry_name);
+    refresh();
 
     pid = fork();
     if (pid == -1) {
