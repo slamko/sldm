@@ -51,6 +51,14 @@ sldm [options] [entry] - Enter the menu screen
 options:
   -r    force run xorg if an entry name is the same as the commands above
 ```  
+
+To add an entry:
+```
+sldm add plasma5 "startkde"
+```
+This will generate a file for ```startx``` in cache directory copying the config from local .xinitrc (if specified in config.h)
+and appending ```exec startkde```.
+
 - ### **Configuration**
 Although there isn't much to configure as it is pretty simple tool, there are few options in config.h inside cloned repo.
 Configuration is provided with C language macroses:
