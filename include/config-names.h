@@ -15,7 +15,7 @@
 
 // Default config values
 #define XINITRC_L "~/.xinitrc"
-#define XPROFILE_L "~/.xprofile"
+#define XPROFILE_L "/.xprofile"
 #define _DEFAULT_ENTRY 1
 #define _PROMPT_TIMEOUT -1
 

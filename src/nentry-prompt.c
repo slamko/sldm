@@ -10,6 +10,7 @@
 #include <math.h>
 #include <signal.h>
 #include <ctype.h>
+#include <sys/wait.h>
 #include "config-names.h"
 #include "nentry-prompt.h"
 #include "log-utils.h"
@@ -79,15 +80,24 @@ static int source_xprofile(void) {
         return res;
     }
 
-    if (access(xprofile_p, R_OK)) {
-        return res;
+    if (access(xprofile_p, X_OK)) {
+        return 0;
     }
     
     if (system(NULL)) {
-        return system(xprofile_p);
+        res = system(xprofile_p);
+    } else {
+        res = fork();
+
+        if (res == 0) {
+            execlp("sh", "sh", "-c", xprofile_p);
+            exit(1);
+        }
+
+        wait(&res);
     }
         
-    return res;
+    return !!res;
 }
 
 static int start_x(const char *entry_name) {
@@ -96,7 +106,7 @@ static int start_x(const char *entry_name) {
     int res = 1;
 
     killtimer();
-    source_xprofile(); {
+    if (source_xprofile()) {
         NEW_LINE();
         NEW_LINE();
         
